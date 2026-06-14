@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">splitMe</string>
+    <string name="members">Members</string>
+    <string name="groups">Groups</string>
+    <string name="add_member">Add Member</string>
+    <string name="create_group">Create Group</string>
+    <string name="no_members">No members yet. Add some!</string>
+    <string name="no_groups">No groups yet. Create one!</string>
+    <string name="add_to_group">Add Member to Group</string>
+</resources>
