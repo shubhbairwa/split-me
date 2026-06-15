@@ -18,9 +18,9 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
         initialValue = emptyList()
     )
 
-    fun addMember(name: String, email: String?) {
+    fun addMember(name: String, email: String?, phoneNumber: String? = null) {
         viewModelScope.launch {
-            repository.insert(Member(name = name, email = email))
+            repository.insert(Member(name = name, email = email, phoneNumber = phoneNumber))
         }
     }
 

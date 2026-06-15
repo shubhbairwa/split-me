@@ -7,5 +7,8 @@ import androidx.room.PrimaryKey
 data class Member(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val email: String? = null
+    val email: String? = null,
+    val phoneNumber: String? = null,
+    val photoUri: String? = null,
+    val isMe: Boolean = false
 )

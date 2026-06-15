@@ -11,10 +11,18 @@ class MemberRepository(private val memberDao: MemberDao) {
 
     suspend fun getOrCreateMe(): Member = withContext(Dispatchers.IO) {
         val members = memberDao.getAllMembersOnce()
-        val me = members.find { it.name.equals("Me", ignoreCase = true) }
+        val me = members.find { it.isMe }
         if (me != null) return@withContext me
         
-        val newMe = Member(name = "Me")
+        // Fallback for old data where isMe was not set
+        val oldMe = members.find { it.name.equals("Me", ignoreCase = true) }
+        if (oldMe != null) {
+            val updatedMe = oldMe.copy(isMe = true)
+            memberDao.update(updatedMe)
+            return@withContext updatedMe
+        }
+
+        val newMe = Member(name = "Me", isMe = true)
         val id = memberDao.insert(newMe)
         newMe.copy(id = id)
     }

@@ -12,11 +12,13 @@ import androidx.compose.ui.unit.dp
 import com.shubh.splitme.ui.dashboard.DashboardScreen
 import com.shubh.splitme.ui.group.GroupListScreen
 import com.shubh.splitme.ui.member.MemberListScreen
+import com.shubh.splitme.ui.profile.ProfileScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Groups : Screen("groups")
     object Members : Screen("members")
+    object Profile : Screen("profile")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,9 +85,10 @@ fun MainScreen() {
                         .padding(innerPadding)
                 ) {
                     when (currentScreen) {
-                        is Screen.Dashboard -> DashboardScreen()
+                        is Screen.Dashboard -> DashboardScreen(onNavigateToProfile = { currentScreen = Screen.Profile })
                         is Screen.Groups -> GroupListScreen()
                         is Screen.Members -> MemberListScreen()
+                        is Screen.Profile -> ProfileScreen(onBack = { currentScreen = Screen.Dashboard })
                     }
                 }
             }

@@ -21,7 +21,7 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(onNavigateToProfile: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val viewModel: DashboardViewModel = viewModel(
@@ -32,7 +32,14 @@ fun DashboardScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("splitMe Dashboard") })
+            TopAppBar(
+                title = { Text("splitMe Dashboard") },
+                actions = {
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profile")
+                    }
+                }
+            )
         }
     ) { padding ->
         LazyColumn(

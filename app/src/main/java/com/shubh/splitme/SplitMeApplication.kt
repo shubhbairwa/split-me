@@ -13,7 +13,7 @@ class SplitMeApplication : Application() {
             applicationContext,
             SplitMeDatabase::class.java,
             "splitme_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     val memberRepository: MemberRepository by lazy {

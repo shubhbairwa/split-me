@@ -34,7 +34,7 @@ fun BillEntryScreen(
     var category by remember { mutableStateOf("General") }
     var payer by remember { 
         mutableStateOf<Member?>(
-            members.find { it.name.equals("Me", ignoreCase = true) } ?: members.firstOrNull()
+            members.find { it.isMe } ?: members.firstOrNull()
         ) 
     }
     var isManualSplit by remember { mutableStateOf(false) }

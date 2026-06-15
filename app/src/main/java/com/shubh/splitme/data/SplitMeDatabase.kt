@@ -15,7 +15,7 @@ import com.shubh.splitme.data.entity.*
         Bill::class,
         ExpenseShare::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class SplitMeDatabase : RoomDatabase() {
