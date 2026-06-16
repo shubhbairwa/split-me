@@ -11,13 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.shubh.splitme.ui.dashboard.DashboardScreen
 import com.shubh.splitme.ui.group.GroupListScreen
-import com.shubh.splitme.ui.member.MemberListScreen
 import com.shubh.splitme.ui.profile.ProfileScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Groups : Screen("groups")
-    object Members : Screen("members")
     object Profile : Screen("profile")
 }
 
@@ -44,12 +42,6 @@ fun MainScreen() {
                         selected = currentScreen == Screen.Groups,
                         onClick = { currentScreen = Screen.Groups }
                     )
-                    NavigationRailItem(
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                        label = { Text("Members") },
-                        selected = currentScreen == Screen.Members,
-                        onClick = { currentScreen = Screen.Members }
-                    )
                 }
             }
             
@@ -69,12 +61,6 @@ fun MainScreen() {
                                 selected = currentScreen == Screen.Groups,
                                 onClick = { currentScreen = Screen.Groups }
                             )
-                            NavigationBarItem(
-                                icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                                label = { Text("Members") },
-                                selected = currentScreen == Screen.Members,
-                                onClick = { currentScreen = Screen.Members }
-                            )
                         }
                     }
                 }
@@ -87,7 +73,6 @@ fun MainScreen() {
                     when (currentScreen) {
                         is Screen.Dashboard -> DashboardScreen(onNavigateToProfile = { currentScreen = Screen.Profile })
                         is Screen.Groups -> GroupListScreen()
-                        is Screen.Members -> MemberListScreen()
                         is Screen.Profile -> ProfileScreen(onBack = { currentScreen = Screen.Dashboard })
                     }
                 }

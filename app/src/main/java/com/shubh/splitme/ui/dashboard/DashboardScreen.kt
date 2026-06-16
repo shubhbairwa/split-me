@@ -77,7 +77,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
             item {
                 Text(
-                    "People Summary",
+                    "Contact Summary",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.Bold

@@ -21,6 +21,10 @@ class GroupRepository(private val groupDao: GroupDao) {
 
     fun getGroupWithMembersById(groupId: Long): Flow<GroupWithMembers?> = groupDao.getGroupWithMembersById(groupId)
 
+    suspend fun removeMemberFromGroup(groupId: Long, memberId: Long) = withContext(Dispatchers.IO) {
+        groupDao.deleteGroupMemberCrossRef(GroupMemberCrossRef(groupId, memberId))
+    }
+
     suspend fun deleteGroup(group: Group) = withContext(Dispatchers.IO) {
         groupDao.deleteGroup(group)
     }

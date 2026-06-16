@@ -6,17 +6,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.data.entity.GroupWithMembers
+import com.shubh.splitme.data.entity.Member
 import com.shubh.splitme.ui.bill.BillEntryScreen
 import com.shubh.splitme.ui.bill.BillViewModel
+import com.shubh.splitme.ui.member.ContactSelectionScreen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,15 +32,46 @@ fun GroupDetailScreen(
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val billViewModel: BillViewModel = viewModel(factory = BillViewModel.Factory(app.billRepository))
+    val groupViewModel: GroupViewModel = viewModel(factory = GroupViewModel.Factory(app.groupRepository, app.memberRepository))
     
     val bills by billViewModel.getBillsByGroup(groupWithMembers.group.id).collectAsState()
     var showBillEntry by remember { mutableStateOf(false) }
     var showSettleUp by remember { mutableStateOf(false) }
+    var showAddMember by remember { mutableStateOf(false) }
 
     if (showSettleUp) {
         SettleUpScreen(
             groupId = groupWithMembers.group.id,
             onBack = { showSettleUp = false }
+        )
+    } else if (showAddMember) {
+        ContactSelectionScreen(
+            selectedMembers = groupWithMembers.members,
+            onMemberToggle = { name, email, phone ->
+                groupViewModel.viewModelScope.launch {
+                    val allMembers = app.memberRepository.getAllMembersOnce()
+                    val existingMember = allMembers.find { 
+                        (it.phoneNumber != null && it.phoneNumber == phone) || 
+                        (it.name == name && it.phoneNumber == null && phone == null)
+                    }
+                    
+                    if (existingMember != null) {
+                        val isInGroup = groupWithMembers.members.any { it.id == existingMember.id }
+                        if (isInGroup) {
+                            if (!existingMember.isMe) {
+                                groupViewModel.removeMemberFromGroup(groupWithMembers.group.id, existingMember.id)
+                            }
+                        } else {
+                            groupViewModel.addMemberToGroup(groupWithMembers.group.id, existingMember.id)
+                        }
+                    } else {
+                        // Create new member and add to group
+                        val newMemberId = app.memberRepository.insert(Member(name = name, email = email, phoneNumber = phone))
+                        groupViewModel.addMemberToGroup(groupWithMembers.group.id, newMemberId)
+                    }
+                }
+            },
+            onBack = { showAddMember = false }
         )
     } else if (showBillEntry) {
         BillEntryScreen(
@@ -59,8 +95,11 @@ fun GroupDetailScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = { showAddMember = true }) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = "Manage Contacts")
+                        }
                         TextButton(onClick = { showSettleUp = true }) {
-                            Text("Settle Up", color = MaterialTheme.colorScheme.primary)
+                            Text("Settle Up")
                         }
                     }
                 )

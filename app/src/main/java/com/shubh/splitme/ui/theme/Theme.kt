@@ -63,8 +63,8 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun SplitMeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Set dynamic color to false by default to respect custom brand colors
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

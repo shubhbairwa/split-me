@@ -37,6 +37,12 @@ class GroupViewModel(
         }
     }
 
+    fun removeMemberFromGroup(groupId: Long, memberId: Long) {
+        viewModelScope.launch {
+            groupRepository.removeMemberFromGroup(groupId, memberId)
+        }
+    }
+
     fun deleteGroup(group: Group) {
         viewModelScope.launch {
             groupRepository.deleteGroup(group)

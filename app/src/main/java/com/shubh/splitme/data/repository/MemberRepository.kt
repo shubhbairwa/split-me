@@ -42,4 +42,8 @@ class MemberRepository(private val memberDao: MemberDao) {
     suspend fun getMemberById(id: Long) = withContext(Dispatchers.IO) {
         memberDao.getMemberById(id)
     }
+
+    suspend fun getAllMembersOnce(): List<Member> = withContext(Dispatchers.IO) {
+        memberDao.getAllMembersOnce()
+    }
 }

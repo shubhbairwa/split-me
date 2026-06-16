@@ -30,5 +30,8 @@ interface GroupDao {
     suspend fun getGroupById(groupId: Long): Group?
 
     @Delete
+    suspend fun deleteGroupMemberCrossRef(crossRef: GroupMemberCrossRef)
+
+    @Delete
     suspend fun deleteGroup(group: Group)
 }
