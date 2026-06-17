@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317909245980",
+    "project_id": "shubh-690d8",
+    "storage_bucket": "shubh-690d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317909245980:android:93d1cdb1c34a3d7e92ffd9",
+        "android_client_info": {
+          "package_name": "com.shubh.splitme"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4XE9gYm7WG_8hEc7A4BBoeb5fDJBcD6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

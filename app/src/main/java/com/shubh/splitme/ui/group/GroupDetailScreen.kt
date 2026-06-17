@@ -16,11 +16,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
-import com.shubh.splitme.data.entity.GroupWithMembers
-import com.shubh.splitme.data.entity.Member
+import com.shubh.splitme.domain.model.BillWithShares
+import com.shubh.splitme.domain.model.GroupWithMembers
+import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.bill.BillEntryScreen
 import com.shubh.splitme.ui.bill.BillViewModel
 import com.shubh.splitme.ui.member.ContactSelectionScreen
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +34,7 @@ fun GroupDetailScreen(
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val billViewModel: BillViewModel = viewModel(factory = BillViewModel.Factory(app.billRepository))
-    val groupViewModel: GroupViewModel = viewModel(factory = GroupViewModel.Factory(app.groupRepository, app.memberRepository))
+    val groupViewModel: GroupViewModel = viewModel(factory = GroupViewModel.Factory(app.authRepository, app.groupRepository))
     
     val bills by billViewModel.getBillsByGroup(groupWithMembers.group.id).collectAsState()
     var showBillEntry by remember { mutableStateOf(false) }
@@ -49,25 +51,21 @@ fun GroupDetailScreen(
             selectedMembers = groupWithMembers.members,
             onMemberToggle = { name, email, phone ->
                 groupViewModel.viewModelScope.launch {
-                    val allMembers = app.memberRepository.getAllMembersOnce()
-                    val existingMember = allMembers.find { 
-                        (it.phoneNumber != null && it.phoneNumber == phone) || 
-                        (it.name == name && it.phoneNumber == null && phone == null)
-                    }
+                    val me = app.authRepository.currentUser.first()
+                    // Firestore handles member lookups
+                    // For now, let's keep it simple: Add by ID if known, or search by phone
+                    // This logic should ideally be in GroupViewModel or a UseCase
+                    // Simplifying for the refactor:
+                    val members = app.memberRepository.getAllMembers().first()
+                    val existingMember = members.find { it.phoneNumber == phone || it.email == email }
                     
                     if (existingMember != null) {
-                        val isInGroup = groupWithMembers.members.any { it.id == existingMember.id }
-                        if (isInGroup) {
-                            if (!existingMember.isMe) {
-                                groupViewModel.removeMemberFromGroup(groupWithMembers.group.id, existingMember.id)
-                            }
-                        } else {
-                            groupViewModel.addMemberToGroup(groupWithMembers.group.id, existingMember.id)
-                        }
+                        groupViewModel.addMemberToGroup(groupWithMembers.group.id, existingMember.id)
                     } else {
-                        // Create new member and add to group
-                        val newMemberId = app.memberRepository.insert(Member(name = name, email = email, phoneNumber = phone))
-                        groupViewModel.addMemberToGroup(groupWithMembers.group.id, newMemberId)
+                        // Create new member (Simplified, usually invite system)
+                        val newMember = Member(name = name, email = email, phoneNumber = phone)
+                        app.memberRepository.saveMember(newMember)
+                        groupViewModel.addMemberToGroup(groupWithMembers.group.id, newMember.id)
                     }
                 }
             },
@@ -96,7 +94,7 @@ fun GroupDetailScreen(
                     },
                     actions = {
                         IconButton(onClick = { showAddMember = true }) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = "Manage Contacts")
+                            Icon(Icons.Default.PersonAdd, contentDescription = "Manage Members")
                         }
                         TextButton(onClick = { showSettleUp = true }) {
                             Text("Settle Up")
@@ -111,15 +109,14 @@ fun GroupDetailScreen(
             }
         ) { padding ->
             Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-                // Summary Card
                 val totalSpent = bills.sumOf { it.bill.totalAmount }
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Total Group Spending", style = MaterialTheme.typography.titleMedium)
-                        Text("${"%.2f".format(totalSpent)}", style = MaterialTheme.typography.headlineLarge)
+                        Text("Total Group Spending", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("${"%.2f".format(totalSpent)}", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
 

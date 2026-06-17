@@ -1,7 +1,6 @@
 package com.shubh.splitme.ui.member
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +29,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.data.ContactInfo
-import com.shubh.splitme.data.entity.Member
+import com.shubh.splitme.domain.model.Member
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -40,8 +39,8 @@ fun ContactSelectionScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val repository = (context.applicationContext as SplitMeApplication).memberRepository
-    val viewModel: MemberViewModel = viewModel(factory = MemberViewModel.Factory(repository))
+    val app = context.applicationContext as SplitMeApplication
+    val viewModel: MemberViewModel = viewModel(factory = MemberViewModel.Factory(app.memberRepository))
     
     val contacts by viewModel.contacts.collectAsState()
     var searchQuery by remember { mutableStateOf("") }

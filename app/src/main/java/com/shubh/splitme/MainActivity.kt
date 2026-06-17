@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val app = application as SplitMeApplication
-            viewModel(factory = MainViewModel.Factory(app.memberRepository, app.groupRepository)) as MainViewModel
+            viewModel(factory = MainViewModel.Factory(app.authRepository, app.memberRepository, app.groupRepository)) as MainViewModel
 
             SplitMeTheme {
                 MainScreen()

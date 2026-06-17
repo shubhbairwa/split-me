@@ -3,10 +3,12 @@ package com.shubh.splitme.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.shubh.splitme.data.entity.BillWithShares
-import com.shubh.splitme.data.entity.Member
-import com.shubh.splitme.data.repository.BillRepository
-import com.shubh.splitme.data.repository.MemberRepository
+import com.shubh.splitme.domain.model.BillWithShares
+import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.domain.repository.AuthRepository
+import com.shubh.splitme.domain.repository.BillRepository
+import com.shubh.splitme.domain.repository.MemberRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 data class DashboardState(
@@ -21,18 +23,26 @@ data class MemberSummary(
     val balance: Double // Positive: they owe me, Negative: I owe them
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel(
+    private val authRepository: AuthRepository,
     private val billRepository: BillRepository,
     private val memberRepository: MemberRepository
 ) : ViewModel() {
 
-    val state: StateFlow<DashboardState> = combine(
-        billRepository.getAllBillsWithShares(),
-        memberRepository.allMembers
-    ) { bills, members ->
-        val me = memberRepository.getOrCreateMe()
-        calculateDashboardState(bills, members, me.id)
-    }
+    val state: StateFlow<DashboardState> = authRepository.currentUser
+        .flatMapLatest { user ->
+            if (user != null) {
+                combine(
+                    billRepository.getAllBillsWithShares(),
+                    memberRepository.getAllMembers()
+                ) { bills, members ->
+                    calculateDashboardState(bills, members, user.id)
+                }
+            } else {
+                flowOf(DashboardState())
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -42,18 +52,17 @@ class DashboardViewModel(
     private fun calculateDashboardState(
         bills: List<BillWithShares>,
         members: List<Member>,
-        meId: Long
+        meId: String
     ): DashboardState {
         var totalOwedToMe = 0.0
         var totalIOwe = 0.0
-        val balancesMap = mutableMapOf<Long, Double>()
+        val balancesMap = mutableMapOf<String, Double>()
 
         bills.forEach { billWithShares ->
             val bill = billWithShares.bill
             val shares = billWithShares.shares
 
             if (bill.payerId == meId) {
-                // I paid. Others owe me their share.
                 shares.forEach { share ->
                     if (share.memberId != meId) {
                         totalOwedToMe += share.amount
@@ -61,7 +70,6 @@ class DashboardViewModel(
                     }
                 }
             } else {
-                // Someone else paid. I might owe them.
                 shares.forEach { share ->
                     if (share.memberId == meId) {
                         totalIOwe += share.amount
@@ -87,15 +95,13 @@ class DashboardViewModel(
     }
 
     class Factory(
+        private val authRepository: AuthRepository,
         private val billRepository: BillRepository,
         private val memberRepository: MemberRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return DashboardViewModel(billRepository, memberRepository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            @Suppress("UNCHECKED_CAST")
+            return DashboardViewModel(authRepository, billRepository, memberRepository) as T
         }
     }
 }

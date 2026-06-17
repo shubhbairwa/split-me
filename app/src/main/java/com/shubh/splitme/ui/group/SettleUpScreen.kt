@@ -17,19 +17,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
-import com.shubh.splitme.data.entity.Member
+import com.shubh.splitme.domain.model.Member
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettleUpScreen(
-    groupId: Long,
+    groupId: String,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val viewModel: SettleUpViewModel = viewModel(
-        key = groupId.toString(),
+        key = groupId,
         factory = SettleUpViewModel.Factory(app.billRepository, app.groupRepository, groupId)
     )
 
@@ -97,7 +97,6 @@ fun SettleUpScreen(
                         )
                     }
 
-                    // Simple "Who owes whom" calculation for display
                     val creditors = balances.filter { it.balance > 0.01 }.sortedByDescending { it.balance }
                     val debtors = balances.filter { it.balance < -0.01 }.sortedBy { it.balance }
 
@@ -111,8 +110,6 @@ fun SettleUpScreen(
                             }
                         }
                     } else {
-                        // Very basic greedy algorithm to show one possible settlement
-                        // (In a real app, this would be more complex to minimize transactions)
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -120,13 +117,6 @@ fun SettleUpScreen(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     debtors.forEach { debtor ->
-                                        creditors.forEach { creditor ->
-                                            // This is purely visual and interactive to trigger a dialog
-                                            // In a real app we'd calculate exactly how much D owes C
-                                            // For now, let's just let the user pick a pair.
-                                        }
-                                        
-                                        // Let's just show a list of people who owe and let them pick who to pay
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -134,7 +124,6 @@ fun SettleUpScreen(
                                         ) {
                                             Text("${debtor.member.name} owes money")
                                             Button(onClick = { 
-                                                // Default to paying the first creditor for simplicity in UI
                                                 if (creditors.isNotEmpty()) {
                                                     showSettleDialog = debtor.member to creditors.first().member
                                                 }

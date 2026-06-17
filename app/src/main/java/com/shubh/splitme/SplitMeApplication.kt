@@ -1,30 +1,20 @@
 package com.shubh.splitme
 
 import android.app.Application
-import androidx.room.Room
-import com.shubh.splitme.data.SplitMeDatabase
-import com.shubh.splitme.data.repository.BillRepository
-import com.shubh.splitme.data.repository.GroupRepository
-import com.shubh.splitme.data.repository.MemberRepository
+import com.shubh.splitme.data.firebase.FirebaseAuthRepository
+import com.shubh.splitme.data.firebase.FirestoreBillRepository
+import com.shubh.splitme.data.firebase.FirestoreGroupRepository
+import com.shubh.splitme.data.firebase.FirestoreMemberRepository
+import com.shubh.splitme.domain.repository.AuthRepository
+import com.shubh.splitme.domain.repository.BillRepository
+import com.shubh.splitme.domain.repository.GroupRepository
+import com.shubh.splitme.domain.repository.MemberRepository
 
 class SplitMeApplication : Application() {
-    val database: SplitMeDatabase by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            SplitMeDatabase::class.java,
-            "splitme_database"
-        ).fallbackToDestructiveMigration().build()
-    }
-
-    val memberRepository: MemberRepository by lazy {
-        MemberRepository(database.memberDao())
-    }
-
-    val groupRepository: GroupRepository by lazy {
-        GroupRepository(database.groupDao())
-    }
-
-    val billRepository: BillRepository by lazy {
-        BillRepository(database.billDao())
-    }
+    
+    // To change backend, just swap these implementations
+    val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
+    val memberRepository: MemberRepository by lazy { FirestoreMemberRepository() }
+    val groupRepository: GroupRepository by lazy { FirestoreGroupRepository() }
+    val billRepository: BillRepository by lazy { FirestoreBillRepository() }
 }

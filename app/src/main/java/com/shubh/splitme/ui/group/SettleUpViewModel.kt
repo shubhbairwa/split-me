@@ -3,12 +3,12 @@ package com.shubh.splitme.ui.group
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.shubh.splitme.data.entity.Bill
-import com.shubh.splitme.data.entity.BillWithShares
-import com.shubh.splitme.data.entity.ExpenseShare
-import com.shubh.splitme.data.entity.Member
-import com.shubh.splitme.data.repository.BillRepository
-import com.shubh.splitme.data.repository.GroupRepository
+import com.shubh.splitme.domain.model.Bill
+import com.shubh.splitme.domain.model.BillWithShares
+import com.shubh.splitme.domain.model.ExpenseShare
+import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.domain.repository.BillRepository
+import com.shubh.splitme.domain.repository.GroupRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -20,7 +20,7 @@ data class MemberBalance(
 class SettleUpViewModel(
     private val billRepository: BillRepository,
     private val groupRepository: GroupRepository,
-    private val groupId: Long
+    private val groupId: String
 ) : ViewModel() {
 
     val memberBalances: StateFlow<List<MemberBalance>> = combine(
@@ -42,10 +42,8 @@ class SettleUpViewModel(
             val bill = billWithShares.bill
             val shares = billWithShares.shares
             
-            // Payer gets credit
             balanceMap[bill.payerId] = (balanceMap[bill.payerId] ?: 0.0) + bill.totalAmount
             
-            // Each share is what someone owes
             shares.forEach { share ->
                 balanceMap[share.memberId] = (balanceMap[share.memberId] ?: 0.0) - share.amount
             }
@@ -56,7 +54,7 @@ class SettleUpViewModel(
         }.sortedByDescending { it.balance }
     }
 
-    fun settleUp(fromMemberId: Long, toMemberId: Long, amount: Double) {
+    fun settleUp(fromMemberId: String, toMemberId: String, amount: Double) {
         viewModelScope.launch {
             val settlementBill = Bill(
                 groupId = groupId,
@@ -66,7 +64,7 @@ class SettleUpViewModel(
                 payerId = fromMemberId
             )
             val share = ExpenseShare(
-                billId = 0,
+                billId = "",
                 memberId = toMemberId,
                 amount = amount
             )
@@ -77,14 +75,11 @@ class SettleUpViewModel(
     class Factory(
         private val billRepository: BillRepository,
         private val groupRepository: GroupRepository,
-        private val groupId: Long
+        private val groupId: String
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(SettleUpViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return SettleUpViewModel(billRepository, groupRepository, groupId) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            @Suppress("UNCHECKED_CAST")
+            return SettleUpViewModel(billRepository, groupRepository, groupId) as T
         }
     }
 }

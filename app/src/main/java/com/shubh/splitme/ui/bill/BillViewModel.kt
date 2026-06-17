@@ -3,10 +3,10 @@ package com.shubh.splitme.ui.bill
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.shubh.splitme.data.entity.Bill
-import com.shubh.splitme.data.entity.BillWithShares
-import com.shubh.splitme.data.entity.ExpenseShare
-import com.shubh.splitme.data.repository.BillRepository
+import com.shubh.splitme.domain.model.Bill
+import com.shubh.splitme.domain.model.BillWithShares
+import com.shubh.splitme.domain.model.ExpenseShare
+import com.shubh.splitme.domain.repository.BillRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class BillViewModel(private val repository: BillRepository) : ViewModel() {
 
-    fun getBillsByGroup(groupId: Long): StateFlow<List<BillWithShares>> {
+    fun getBillsByGroup(groupId: String): StateFlow<List<BillWithShares>> {
         return repository.getBillsByGroup(groupId).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -23,11 +23,11 @@ class BillViewModel(private val repository: BillRepository) : ViewModel() {
     }
 
     fun addBill(
-        groupId: Long?,
+        groupId: String?,
         title: String,
         totalAmount: Double,
         category: String,
-        payerId: Long,
+        payerId: String,
         shares: List<ExpenseShare>
     ) {
         viewModelScope.launch {
@@ -44,11 +44,8 @@ class BillViewModel(private val repository: BillRepository) : ViewModel() {
 
     class Factory(private val repository: BillRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(BillViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return BillViewModel(repository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            @Suppress("UNCHECKED_CAST")
+            return BillViewModel(repository) as T
         }
     }
 }

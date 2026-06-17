@@ -13,36 +13,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.shubh.splitme.data.entity.ExpenseShare
-import com.shubh.splitme.data.entity.Member
+import com.shubh.splitme.domain.model.ExpenseShare
+import com.shubh.splitme.domain.model.Member
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BillEntryScreen(
-    groupId: Long?,
+    groupId: String?,
     groupName: String,
     members: List<Member>,
     onDismiss: () -> Unit,
-    onSave: (String, Double, String, Long, List<ExpenseShare>) -> Unit
+    onSave: (String, Double, String, String, List<ExpenseShare>) -> Unit
 ) {
-    // Ensure "Me" is always present in the splitting members
-    // If not in the passed list, we should theoretically have it.
-    // In this app design, "Me" should already be in the group members.
-
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("General") }
     var payer by remember { 
         mutableStateOf<Member?>(
-            members.find { it.isMe } ?: members.firstOrNull()
+            members.find { it.name.equals("Me", ignoreCase = true) } ?: members.firstOrNull()
         ) 
     }
     var isManualSplit by remember { mutableStateOf(false) }
     
-    // Manual shares map: MemberId -> Amount string
-    val manualShares = remember { mutableStateMapOf<Long, String>() }
+    val manualShares = remember { mutableStateMapOf<String, String>() }
     
-    // Categories list
     val categories = listOf("General", "Food", "Transport", "Shopping", "Entertainment")
     var showCategoryMenu by remember { mutableStateOf(false) }
     var showPayerMenu by remember { mutableStateOf(false) }
@@ -64,7 +58,7 @@ fun BillEntryScreen(
                             val finalShares = if (isManualSplit) {
                                 members.map { member ->
                                     ExpenseShare(
-                                        billId = 0,
+                                        billId = "",
                                         memberId = member.id,
                                         amount = manualShares[member.id]?.toDoubleOrNull() ?: 0.0
                                     )
@@ -72,7 +66,7 @@ fun BillEntryScreen(
                             } else {
                                 val equalShare = if (members.isNotEmpty()) totalAmount / members.size else 0.0
                                 members.map { member ->
-                                    ExpenseShare(billId = 0, memberId = member.id, amount = equalShare)
+                                    ExpenseShare(billId = "", memberId = member.id, amount = equalShare)
                                 }
                             }
                             
@@ -115,7 +109,6 @@ fun BillEntryScreen(
 
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Category Selection
                     ExposedDropdownMenuBox(
                         expanded = showCategoryMenu,
                         onExpandedChange = { showCategoryMenu = it },
@@ -145,7 +138,6 @@ fun BillEntryScreen(
                         }
                     }
 
-                    // Payer Selection
                     ExposedDropdownMenuBox(
                         expanded = showPayerMenu,
                         onExpandedChange = { showPayerMenu = it },

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
-import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +24,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val viewModel: DashboardViewModel = viewModel(
-        factory = DashboardViewModel.Factory(app.billRepository, app.memberRepository)
+        factory = DashboardViewModel.Factory(app.authRepository, app.billRepository, app.memberRepository)
     )
 
     val state by viewModel.state.collectAsState()
@@ -77,7 +76,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
             item {
                 Text(
-                    "Contact Summary",
+                    "People Summary",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.Bold
