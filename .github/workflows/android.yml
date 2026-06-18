@@ -38,3 +38,11 @@ jobs:
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
+
+      - name: Build Debug APK
+        if: github.ref == 'refs/heads/develop'
+        run: ./gradlew assembleDebug
+
+      - name: Build Release Bundle
+        if: github.ref == 'refs/heads/main'
+        run: ./gradlew bundleRelease
