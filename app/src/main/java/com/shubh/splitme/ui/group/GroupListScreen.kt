@@ -31,6 +31,14 @@ fun GroupListScreen() {
     val groups by groupViewModel.groupsWithMembers.collectAsState()
     val allMembers by memberViewModel.allMembers.collectAsState()
     
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        groupViewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var showAddGroupDialog by remember { mutableStateOf(false) }
     var selectedGroupForMemberAdd by remember { mutableStateOf<Group?>(null) }
     var selectedGroupForDetail by remember { mutableStateOf<GroupWithMembers?>(null) }
@@ -42,6 +50,7 @@ fun GroupListScreen() {
         )
     } else {
         Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = { TopAppBar(title = { Text("Groups") }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showAddGroupDialog = true }) {

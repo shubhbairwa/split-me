@@ -40,6 +40,19 @@ fun GroupDetailScreen(
     var showBillEntry by remember { mutableStateOf(false) }
     var showSettleUp by remember { mutableStateOf(false) }
     var showAddMember by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        groupViewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+    
+    LaunchedEffect(Unit) {
+        billViewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     if (showSettleUp) {
         SettleUpScreen(
@@ -84,6 +97,7 @@ fun GroupDetailScreen(
         )
     } else {
         Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = { Text(groupWithMembers.group.name) },

@@ -8,14 +8,14 @@ import com.shubh.splitme.data.fetchContacts
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.domain.repository.MemberRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
+
+    private val _error = MutableSharedFlow<String>()
+    val error: SharedFlow<String> = _error.asSharedFlow()
 
     private val _contacts = MutableStateFlow<List<ContactInfo>>(emptyList())
     val contacts: StateFlow<List<ContactInfo>> = _contacts
@@ -28,16 +28,29 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
 
     fun loadContacts(context: android.content.Context) {
         viewModelScope.launch {
-            val contactList = withContext(Dispatchers.IO) {
-                fetchContacts(context)
+            try {
+                val contactList = withContext(Dispatchers.IO) {
+                    fetchContacts(context)
+                }
+                _contacts.value = contactList
+            } catch (e: Exception) {
+                _error.emit("Failed to load contacts: ${e.message}")
             }
-            _contacts.value = contactList
         }
     }
 
     fun addMember(name: String, email: String?, phoneNumber: String? = null) {
+        if (name.isBlank()) {
+            viewModelScope.launch { _error.emit("Please enter a member name") }
+            return
+        }
+
         viewModelScope.launch {
-            repository.saveMember(Member(name = name, email = email, phoneNumber = phoneNumber))
+            try {
+                repository.saveMember(Member(name = name, email = email, phoneNumber = phoneNumber))
+            } catch (e: Exception) {
+                _error.emit("Failed to save member: ${e.message}")
+            }
         }
     }
 

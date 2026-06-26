@@ -15,6 +15,9 @@ class GroupViewModel(
     private val groupRepository: GroupRepository
 ) : ViewModel() {
 
+    private val _error = MutableSharedFlow<String>()
+    val error: SharedFlow<String> = _error.asSharedFlow()
+
     val groupsWithMembers: StateFlow<List<GroupWithMembers>> = groupRepository.getGroupsWithMembers()
         .stateIn(
             scope = viewModelScope,
@@ -23,23 +26,40 @@ class GroupViewModel(
         )
 
     fun createGroup(name: String, description: String?) {
+        if (name.isBlank()) {
+            viewModelScope.launch { _error.emit("Please enter a group name") }
+            return
+        }
+
         viewModelScope.launch {
-            val groupId = groupRepository.createGroup(Group(name = name, description = description))
-            authRepository.currentUser.first()?.let { me ->
-                groupRepository.addMemberToGroup(groupId, me.id)
+            try {
+                val groupId = groupRepository.createGroup(Group(name = name, description = description))
+                authRepository.currentUser.first()?.let { me ->
+                    groupRepository.addMemberToGroup(groupId, me.id)
+                }
+            } catch (e: Exception) {
+                _error.emit("Failed to create group: ${e.message}")
             }
         }
     }
 
     fun addMemberToGroup(groupId: String, memberId: String) {
         viewModelScope.launch {
-            groupRepository.addMemberToGroup(groupId, memberId)
+            try {
+                groupRepository.addMemberToGroup(groupId, memberId)
+            } catch (e: Exception) {
+                _error.emit("Failed to add member: ${e.message}")
+            }
         }
     }
 
     fun deleteGroup(groupId: String) {
         viewModelScope.launch {
-            groupRepository.deleteGroup(groupId)
+            try {
+                groupRepository.deleteGroup(groupId)
+            } catch (e: Exception) {
+                _error.emit("Failed to delete group: ${e.message}")
+            }
         }
     }
 

@@ -16,10 +16,20 @@ class ProfileViewModel(
     private val memberRepository: MemberRepository
 ) : ViewModel() {
 
+    private val _error = MutableSharedFlow<String>()
+    val error: SharedFlow<String> = _error.asSharedFlow()
+
     val me: StateFlow<Member?> = authRepository.currentUser
         .flatMapLatest { user ->
             if (user != null) {
-                flow<Member?> { emit(memberRepository.getMemberById(user.id)) }
+                flow<Member?> { 
+                    try {
+                        emit(memberRepository.getMemberById(user.id)) 
+                    } catch (e: Exception) {
+                        _error.emit("Failed to load profile: ${e.message}")
+                        emit(null)
+                    }
+                }
             } else {
                 flowOf(null)
             }
@@ -27,10 +37,19 @@ class ProfileViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun updateProfile(name: String, email: String) {
+        if (name.isBlank()) {
+            viewModelScope.launch { _error.emit("Name cannot be empty") }
+            return
+        }
+
         viewModelScope.launch {
-            me.value?.let { currentMe ->
-                val updatedMe = currentMe.copy(name = name, email = email)
-                memberRepository.saveMember(updatedMe)
+            try {
+                me.value?.let { currentMe ->
+                    val updatedMe = currentMe.copy(name = name, email = email)
+                    memberRepository.saveMember(updatedMe)
+                }
+            } catch (e: Exception) {
+                _error.emit("Failed to update profile: ${e.message}")
             }
         }
     }

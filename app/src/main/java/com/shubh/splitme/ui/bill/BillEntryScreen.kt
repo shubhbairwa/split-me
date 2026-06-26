@@ -25,6 +25,17 @@ fun BillEntryScreen(
     onDismiss: () -> Unit,
     onSave: (String, Double, String, String, List<ExpenseShare>) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val app = context.applicationContext as com.shubh.splitme.SplitMeApplication
+    val billViewModel: BillViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = BillViewModel.Factory(app.billRepository))
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        billViewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("General") }
@@ -44,6 +55,7 @@ fun BillEntryScreen(
     val totalAmount = amountText.toDoubleOrNull() ?: 0.0
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Add Bill to $groupName") },
@@ -72,8 +84,7 @@ fun BillEntryScreen(
                             
                             onSave(title, totalAmount, category, payer!!.id, finalShares)
                         },
-                        enabled = title.isNotBlank() && totalAmount > 0 && payer != null && 
-                            (!isManualSplit || (totalAmount - manualShares.values.sumOf { it.toDoubleOrNull() ?: 0.0 }).let { kotlin.math.abs(it) < 0.01 })
+                        enabled = title.isNotBlank() && totalAmount > 0 && payer != null
                     ) {
                         Icon(Icons.Default.Check, contentDescription = "Save")
                     }

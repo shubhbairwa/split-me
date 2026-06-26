@@ -23,6 +23,9 @@ class SettleUpViewModel(
     private val groupId: String
 ) : ViewModel() {
 
+    private val _error = MutableSharedFlow<String>()
+    val error: SharedFlow<String> = _error.asSharedFlow()
+
     val memberBalances: StateFlow<List<MemberBalance>> = combine(
         billRepository.getBillsByGroup(groupId),
         groupRepository.getGroupWithMembersById(groupId)
@@ -56,19 +59,23 @@ class SettleUpViewModel(
 
     fun settleUp(fromMemberId: String, toMemberId: String, amount: Double) {
         viewModelScope.launch {
-            val settlementBill = Bill(
-                groupId = groupId,
-                title = "Settlement",
-                totalAmount = amount,
-                category = "SettleUp",
-                payerId = fromMemberId
-            )
-            val share = ExpenseShare(
-                billId = "",
-                memberId = toMemberId,
-                amount = amount
-            )
-            billRepository.createBillWithShares(settlementBill, listOf(share))
+            try {
+                val settlementBill = Bill(
+                    groupId = groupId,
+                    title = "Settlement",
+                    totalAmount = amount,
+                    category = "SettleUp",
+                    payerId = fromMemberId
+                )
+                val share = ExpenseShare(
+                    billId = "",
+                    memberId = toMemberId,
+                    amount = amount
+                )
+                billRepository.createBillWithShares(settlementBill, listOf(share))
+            } catch (e: Exception) {
+                _error.emit("Failed to record settlement: ${e.message}")
+            }
         }
     }
 

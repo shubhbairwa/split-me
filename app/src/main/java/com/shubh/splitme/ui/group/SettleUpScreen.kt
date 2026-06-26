@@ -35,8 +35,16 @@ fun SettleUpScreen(
 
     val balances by viewModel.memberBalances.collectAsState()
     var showSettleDialog by remember { mutableStateOf<Pair<Member, Member>?>(null) } // From owes To
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Settle Up") },

@@ -24,8 +24,16 @@ fun MemberListScreen() {
     
     val members by viewModel.allMembers.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = { TopAppBar(title = { Text("Members") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {

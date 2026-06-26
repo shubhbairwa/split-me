@@ -27,6 +27,13 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     LaunchedEffect(me) {
         me?.let {
@@ -36,6 +43,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Profile") },

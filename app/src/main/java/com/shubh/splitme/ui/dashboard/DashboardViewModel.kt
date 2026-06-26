@@ -30,6 +30,9 @@ class DashboardViewModel(
     private val memberRepository: MemberRepository
 ) : ViewModel() {
 
+    private val _error = MutableSharedFlow<String>()
+    val error: SharedFlow<String> = _error.asSharedFlow()
+
     val state: StateFlow<DashboardState> = authRepository.currentUser
         .flatMapLatest { user ->
             if (user != null) {
@@ -38,6 +41,8 @@ class DashboardViewModel(
                     memberRepository.getAllMembers()
                 ) { bills, members ->
                     calculateDashboardState(bills, members, user.id)
+                }.catch { e ->
+                    _error.emit("Failed to load dashboard data: ${e.message}")
                 }
             } else {
                 flowOf(DashboardState())
