@@ -10,6 +10,15 @@ android {
     namespace = "com.shubh.splitme"
     compileSdk = 35
 
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("app_jks")         // your jks file path
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+        }
+    }
     defaultConfig {
         applicationId = "com.shubh.splitme"
         minSdk = 24
@@ -20,11 +29,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
             optimization {
                 enable = false
             }
+
+
         }
     }
     compileOptions {
