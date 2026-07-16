@@ -45,10 +45,16 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease #it will provide both apk and aab of release
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
