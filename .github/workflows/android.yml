@@ -41,14 +41,23 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest/
 
       - name: Build Release APK
-        env:                                          # ✅ Pass secrets as env vars
+        env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Upload Release APK
+      - name: Upload Release APK (GitHub artifact)
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload APK to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: qa-testers
+          file: app/build/outputs/apk/release/app-release.apk
+          releaseNotes: "Automated build from CI - commit ${{ github.sha }}"
