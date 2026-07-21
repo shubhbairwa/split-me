@@ -33,25 +33,31 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew test
 
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-report
-          path: app/build/reports/tests/testDebugUnitTest/
+#      - name: Upload Test Report
+#        uses: actions/upload-artifact@v4
+#        if: always()
+#        with:
+#          name: test-report
+#          path: app/build/reports/tests/testDebugUnitTest/
 
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease #it will provide both apk and aab of release
 
-      - name: Upload Release APK (GitHub artifact)
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload APK to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
