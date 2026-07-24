@@ -73,4 +73,4 @@ jobs:
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: qa-testers
           file: app/build/outputs/apk/release/app-release.apk
-          releaseNotes: "Automated build from CI - commit ${{ github.sha }}"
+          releaseNotes: "Automated build from CI - commit ${{ github.sha }}" #new line
