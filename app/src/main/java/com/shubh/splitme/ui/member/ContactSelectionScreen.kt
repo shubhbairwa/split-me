@@ -30,12 +30,16 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.data.ContactInfo
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.theme.CardElevation
+import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ContactSelectionScreen(
     selectedMembers: List<Member>,
-    onMemberToggle: (name: String, email: String?, phone: String?) -> Unit,
+    onAddContact: (name: String, email: String?, phone: String?) -> Unit,
+    onRemoveMember: (Member) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -60,10 +64,11 @@ fun ContactSelectionScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Add Contacts") },
+                    title = { Text("Add Contacts", color = TextPrimary) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                         }
                     }
                 )
@@ -72,19 +77,24 @@ fun ContactSelectionScreen(
                     onValueChange = { searchQuery = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     placeholder = { Text("Search contacts...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     shape = CircleShape,
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
                     )
                 )
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showManualAdd = true }) {
+            FloatingActionButton(
+                onClick = { showManualAdd = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Manually")
             }
         }
@@ -107,15 +117,18 @@ fun ContactSelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(filteredContacts) { contact ->
-                    val isSelected = selectedMembers.any { 
-                        (it.phoneNumber != null && it.phoneNumber == contact.phone) || 
+                    val matchedMember = selectedMembers.find {
+                        (it.phoneNumber != null && it.phoneNumber == contact.phone) ||
                         (it.name == contact.name && it.phoneNumber == null && contact.phone == null)
                     }
-                    
+
                     ContactSelectionCard(
                         contact = contact,
-                        isSelected = isSelected,
-                        onClick = { onMemberToggle(contact.name, contact.email, contact.phone) }
+                        isSelected = matchedMember != null,
+                        onClick = {
+                            if (matchedMember != null) onRemoveMember(matchedMember)
+                            else onAddContact(contact.name, contact.email, contact.phone)
+                        }
                     )
                 }
             }
@@ -125,7 +138,7 @@ fun ContactSelectionScreen(
             AddMemberDialog(
                 onDismiss = { showManualAdd = false },
                 onAdd = { name, email, phone ->
-                    onMemberToggle(name, email, phone)
+                    onAddContact(name, email, phone)
                     showManualAdd = false
                 }
             )
@@ -139,30 +152,32 @@ fun ContactSelectionCard(contact: ContactInfo, isSelected: Boolean, onClick: () 
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else 
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
                 MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             MemberAvatar(name = contact.name, photoUri = contact.photoUri)
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = contact.name,
                     style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 contact.phone?.let {
-                    Text(text = it, style = MaterialTheme.typography.bodySmall)
+                    Text(text = it, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                 }
             }
             

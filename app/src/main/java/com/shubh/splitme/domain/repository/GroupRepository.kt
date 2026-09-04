@@ -9,6 +9,7 @@ interface GroupRepository {
     fun getGroupWithMembersById(groupId: String): Flow<GroupWithMembers?>
     suspend fun createGroup(group: Group): String
     suspend fun addMemberToGroup(groupId: String, memberId: String)
+    suspend fun removeMemberFromGroup(groupId: String, memberId: String)
     suspend fun deleteGroup(groupId: String)
     suspend fun getGroupsWithMembersOnce(): List<GroupWithMembers>
 }

@@ -11,10 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shubh.splitme.domain.model.ExpenseShare
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.categoryStyleFor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,10 +61,11 @@ fun BillEntryScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Add Bill to $groupName") },
+                title = { Text("Add Bill to $groupName", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 actions = {
@@ -86,7 +90,7 @@ fun BillEntryScreen(
                         },
                         enabled = title.isNotBlank() && totalAmount > 0 && payer != null
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = "Save")
+                        Icon(Icons.Default.Check, contentDescription = "Save", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             )
@@ -104,6 +108,7 @@ fun BillEntryScreen(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
+                    shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -113,6 +118,7 @@ fun BillEntryScreen(
                     value = amountText,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amountText = it },
                     label = { Text("Total Amount") },
+                    shape = MaterialTheme.shapes.medium,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -130,6 +136,11 @@ fun BillEntryScreen(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Category") },
+                            shape = MaterialTheme.shapes.medium,
+                            leadingIcon = {
+                                val style = categoryStyleFor(category)
+                                Icon(style.icon, contentDescription = null, tint = style.badgeColor)
+                            },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryMenu) },
                             modifier = Modifier.menuAnchor()
                         )
@@ -138,8 +149,10 @@ fun BillEntryScreen(
                             onDismissRequest = { showCategoryMenu = false }
                         ) {
                             categories.forEach { cat ->
+                                val style = categoryStyleFor(cat)
                                 DropdownMenuItem(
                                     text = { Text(cat) },
+                                    leadingIcon = { Icon(style.icon, contentDescription = null, tint = style.badgeColor) },
                                     onClick = {
                                         category = cat
                                         showCategoryMenu = false
@@ -159,6 +172,7 @@ fun BillEntryScreen(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Paid By") },
+                            shape = MaterialTheme.shapes.medium,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showPayerMenu) },
                             modifier = Modifier.menuAnchor()
                         )
@@ -185,18 +199,26 @@ fun BillEntryScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Split Type:", style = MaterialTheme.typography.bodyLarge)
+                    Text("Split Type:", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                     Spacer(modifier = Modifier.width(16.dp))
                     FilterChip(
                         selected = !isManualSplit,
                         onClick = { isManualSplit = false },
-                        label = { Text("Equal") }
+                        label = { Text("Equal") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White
+                        )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     FilterChip(
                         selected = isManualSplit,
                         onClick = { isManualSplit = true },
-                        label = { Text("Manual") }
+                        label = { Text("Manual") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White
+                        )
                     )
                 }
             }

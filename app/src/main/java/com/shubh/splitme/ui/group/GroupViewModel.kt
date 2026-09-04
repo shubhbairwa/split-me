@@ -19,6 +19,7 @@ class GroupViewModel(
     val error: SharedFlow<String> = _error.asSharedFlow()
 
     val groupsWithMembers: StateFlow<List<GroupWithMembers>> = groupRepository.getGroupsWithMembers()
+        .catch { e -> _error.emit("Failed to load groups: ${e.message}") }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -49,6 +50,16 @@ class GroupViewModel(
                 groupRepository.addMemberToGroup(groupId, memberId)
             } catch (e: Exception) {
                 _error.emit("Failed to add member: ${e.message}")
+            }
+        }
+    }
+
+    fun removeMemberFromGroup(groupId: String, memberId: String) {
+        viewModelScope.launch {
+            try {
+                groupRepository.removeMemberFromGroup(groupId, memberId)
+            } catch (e: Exception) {
+                _error.emit("Failed to remove member: ${e.message}")
             }
         }
     }

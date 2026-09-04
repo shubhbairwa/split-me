@@ -73,6 +73,10 @@ class FirestoreGroupRepository : GroupRepository {
         groupsCollection.document(groupId).update("memberIds", FieldValue.arrayUnion(memberId)).await()
     }
 
+    override suspend fun removeMemberFromGroup(groupId: String, memberId: String) {
+        groupsCollection.document(groupId).update("memberIds", FieldValue.arrayRemove(memberId)).await()
+    }
+
     override suspend fun deleteGroup(groupId: String) {
         groupsCollection.document(groupId).delete().await()
     }

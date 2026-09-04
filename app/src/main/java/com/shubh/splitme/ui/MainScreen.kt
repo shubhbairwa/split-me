@@ -18,6 +18,8 @@ import com.shubh.splitme.ui.auth.SignupScreen
 import com.shubh.splitme.ui.dashboard.DashboardScreen
 import com.shubh.splitme.ui.group.GroupListScreen
 import com.shubh.splitme.ui.profile.ProfileScreen
+import com.shubh.splitme.ui.theme.AccentOrange
+import com.shubh.splitme.ui.theme.CardWhite
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -50,29 +52,43 @@ fun MainScreen() {
             val isWide = maxWidth > 600.dp
             
             Row(modifier = Modifier.fillMaxSize()) {
+                val navItemColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = CardWhite,
+                    indicatorColor = AccentOrange,
+                    selectedTextColor = AccentOrange
+                )
+                val railItemColors = NavigationRailItemDefaults.colors(
+                    selectedIconColor = CardWhite,
+                    indicatorColor = AccentOrange,
+                    selectedTextColor = AccentOrange
+                )
+
                 if (isWide) {
                     NavigationRail(containerColor = MaterialTheme.colorScheme.surface) {
                         NavigationRailItem(
                             icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
                             label = { Text("Dashboard") },
                             selected = currentScreen == Screen.Dashboard,
-                            onClick = { currentScreen = Screen.Dashboard }
+                            onClick = { currentScreen = Screen.Dashboard },
+                            colors = railItemColors
                         )
                         NavigationRailItem(
                             icon = { Icon(Icons.Default.Group, contentDescription = null) },
                             label = { Text("Groups") },
                             selected = currentScreen == Screen.Groups,
-                            onClick = { currentScreen = Screen.Groups }
+                            onClick = { currentScreen = Screen.Groups },
+                            colors = railItemColors
                         )
                         NavigationRailItem(
                             icon = { Icon(Icons.Default.Person, contentDescription = null) },
                             label = { Text("Profile") },
                             selected = currentScreen == Screen.Profile,
-                            onClick = { currentScreen = Screen.Profile }
+                            onClick = { currentScreen = Screen.Profile },
+                            colors = railItemColors
                         )
                     }
                 }
-                
+
                 Scaffold(
                     bottomBar = {
                         if (!isWide) {
@@ -81,19 +97,22 @@ fun MainScreen() {
                                     icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
                                     label = { Text("Dashboard") },
                                     selected = currentScreen == Screen.Dashboard,
-                                    onClick = { currentScreen = Screen.Dashboard }
+                                    onClick = { currentScreen = Screen.Dashboard },
+                                    colors = navItemColors
                                 )
                                 NavigationBarItem(
                                     icon = { Icon(Icons.Default.Group, contentDescription = null) },
                                     label = { Text("Groups") },
                                     selected = currentScreen == Screen.Groups,
-                                    onClick = { currentScreen = Screen.Groups }
+                                    onClick = { currentScreen = Screen.Groups },
+                                    colors = navItemColors
                                 )
                                 NavigationBarItem(
                                     icon = { Icon(Icons.Default.Person, contentDescription = null) },
                                     label = { Text("Profile") },
                                     selected = currentScreen == Screen.Profile,
-                                    onClick = { currentScreen = Screen.Profile }
+                                    onClick = { currentScreen = Screen.Profile },
+                                    colors = navItemColors
                                 )
                             }
                         }

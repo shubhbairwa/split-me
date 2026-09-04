@@ -11,14 +11,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.ui.text.font.FontWeight
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.domain.model.Group
 import com.shubh.splitme.domain.model.GroupWithMembers
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.components.InitialsAvatar
 import com.shubh.splitme.ui.member.MemberViewModel
+import com.shubh.splitme.ui.theme.CardElevation
+import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,9 +58,18 @@ fun GroupListScreen() {
     } else {
         Scaffold(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            topBar = { TopAppBar(title = { Text("Groups") }) },
+            topBar = {
+                TopAppBar(
+                    title = { Text("Groups", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                )
+            },
             floatingActionButton = {
-                FloatingActionButton(onClick = { showAddGroupDialog = true }) {
+                FloatingActionButton(
+                    onClick = { showAddGroupDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Group")
                 }
             }
@@ -61,44 +77,48 @@ fun GroupListScreen() {
             Column(modifier = Modifier.padding(padding)) {
                 if (groups.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No groups yet. Create one!")
+                        Text("No groups yet. Create one!", color = TextSecondary)
                     }
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
                         items(groups) { groupWithMembers ->
                             val group = groupWithMembers.group
                             val members = groupWithMembers.members
-                            
+
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 onClick = { selectedGroupForDetail = groupWithMembers },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                )
+                                shape = MaterialTheme.shapes.large,
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                             ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Column {
-                                            Text(group.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                            group.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                                        }
-                                        Row {
-                                            IconButton(onClick = { selectedGroupForMemberAdd = group }) {
-                                                Icon(Icons.Default.PersonAdd, contentDescription = "Add Member to Group")
-                                            }
-                                            IconButton(onClick = { groupViewModel.deleteGroup(group.id) }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Delete Group")
-                                            }
-                                        }
+                                Row(
+                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    InitialsAvatar(name = group.name, size = 48)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(group.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            members.joinToString { it.name }.ifBlank { "No members yet" },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = TextSecondary,
+                                            maxLines = 1
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Members: ${members.joinToString { it.name }.ifBlank { "None" }}")
+                                    IconButton(onClick = { selectedGroupForMemberAdd = group }) {
+                                        Icon(Icons.Default.PersonAdd, contentDescription = "Add Member to Group", tint = TextSecondary)
+                                    }
+                                    IconButton(onClick = { groupViewModel.deleteGroup(group.id) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete Group", tint = TextSecondary)
+                                    }
+                                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextSecondary)
                                 }
                             }
                         }

@@ -30,7 +30,10 @@ class FirestoreMemberRepository : MemberRepository {
         return membersCollection.document(id).get().await().toObject(Member::class.java)
     }
 
-    override suspend fun saveMember(member: Member) {
-        membersCollection.document(member.id).set(member).await()
+    override suspend fun saveMember(member: Member): Member {
+        val docRef = if (member.id.isBlank()) membersCollection.document() else membersCollection.document(member.id)
+        val toSave = if (member.id.isBlank()) member.copy(id = docRef.id) else member
+        docRef.set(toSave).await()
+        return toSave
     }
 }

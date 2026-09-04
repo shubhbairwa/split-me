@@ -32,7 +32,9 @@ class SettleUpViewModel(
     ) { bills, groupWithMembers ->
         if (groupWithMembers == null) return@combine emptyList()
         calculateBalances(bills, groupWithMembers.members)
-    }.stateIn(
+    }
+        .catch { e -> _error.emit("Failed to load balances: ${e.message}") }
+        .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

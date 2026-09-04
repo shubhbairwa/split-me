@@ -11,13 +11,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.components.InitialsAvatar
+import com.shubh.splitme.ui.theme.CardElevation
+import com.shubh.splitme.ui.theme.NegativeRed
+import com.shubh.splitme.ui.theme.PositiveGreen
+import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.TextSecondary
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,34 +52,36 @@ fun SettleUpScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Settle Up") },
+                title = { Text("Settle Up", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 }
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp)) {
             Text(
                 "Net Balances",
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(16.dp)
+                color = TextPrimary,
+                modifier = Modifier.padding(vertical = 12.dp)
             )
 
             if (balances.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No balances to show.")
+                    Text("No balances to show.", color = TextSecondary)
                 }
             } else {
-                LazyColumn(modifier = Modifier.weight(1f)) {
+                LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(balances) { memberBalance ->
                         val balance = memberBalance.balance
                         val color = when {
-                            balance > 0.01 -> Color(0xFF4CAF50) // Positive: Owed money
-                            balance < -0.01 -> Color(0xFFF44336) // Negative: Owes money
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            balance > 0.01 -> PositiveGreen
+                            balance < -0.01 -> NegativeRed
+                            else -> TextSecondary
                         }
                         val text = when {
                             balance > 0.01 -> "is owed ${"%.2f".format(balance)}"
@@ -82,26 +89,38 @@ fun SettleUpScreen(
                             else -> "is settled up"
                         }
 
-                        ListItem(
-                            headlineContent = { Text(memberBalance.member.name, fontWeight = FontWeight.Bold) },
-                            supportingContent = { Text(text) },
-                            trailingContent = {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                InitialsAvatar(name = memberBalance.member.name, size = 40)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(memberBalance.member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                    Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                                }
                                 Text(
                                     "${if (balance > 0) "+" else ""}${"%.2f".format(balance)}",
                                     color = color,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                        )
+                        }
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "Suggested Settlements",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            color = TextPrimary
                         )
                     }
 
@@ -112,16 +131,18 @@ fun SettleUpScreen(
                         item {
                             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(48.dp))
-                                    Text("Everyone is settled up!", style = MaterialTheme.typography.bodyLarge)
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PositiveGreen, modifier = Modifier.size(48.dp))
+                                    Text("Everyone is settled up!", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                                 }
                             }
                         }
                     } else {
                         item {
                             Card(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     debtors.forEach { debtor ->
@@ -130,12 +151,15 @@ fun SettleUpScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text("${debtor.member.name} owes money")
-                                            Button(onClick = { 
-                                                if (creditors.isNotEmpty()) {
-                                                    showSettleDialog = debtor.member to creditors.first().member
-                                                }
-                                            }) {
+                                            Text("${debtor.member.name} owes money", color = TextPrimary)
+                                            Button(
+                                                onClick = {
+                                                    if (creditors.isNotEmpty()) {
+                                                        showSettleDialog = debtor.member to creditors.first().member
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                            ) {
                                                 Icon(Icons.Default.Payment, contentDescription = null)
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text("Settle Up")

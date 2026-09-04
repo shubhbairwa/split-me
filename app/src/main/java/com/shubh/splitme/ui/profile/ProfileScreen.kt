@@ -12,7 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.font.FontWeight
 import com.shubh.splitme.SplitMeApplication
+import com.shubh.splitme.ui.theme.AccentOrange
+import com.shubh.splitme.ui.theme.NegativeRed
+import com.shubh.splitme.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,10 +52,11 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Profile") },
+                title = { Text("Profile", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 actions = {
@@ -57,7 +64,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                         viewModel.updateProfile(name, email)
                         onBack()
                     }) {
-                        Text("Save")
+                        Text("Save", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -72,18 +79,27 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                Icons.Default.AccountCircle,
-                contentDescription = null,
-                modifier = Modifier.size(100.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Box(
+                modifier = Modifier
+                    .size(104.dp)
+                    .border(3.dp, AccentOrange, CircleShape)
+                    .padding(6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(88.dp),
+                    tint = AccentOrange
+                )
+            }
 
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
             )
 
@@ -92,18 +108,21 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 enabled = false // Usually email is changed via auth flow
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
-            Button(
+
+            OutlinedButton(
                 onClick = onLogout,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = NegativeRed),
+                border = androidx.compose.foundation.BorderStroke(1.dp, NegativeRed)
             ) {
-                Text("Log Out")
+                Text("Log Out", fontWeight = FontWeight.Bold)
             }
         }
     }

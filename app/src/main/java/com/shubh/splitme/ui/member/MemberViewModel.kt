@@ -20,7 +20,9 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
     private val _contacts = MutableStateFlow<List<ContactInfo>>(emptyList())
     val contacts: StateFlow<List<ContactInfo>> = _contacts
 
-    val allMembers: StateFlow<List<Member>> = repository.getAllMembers().stateIn(
+    val allMembers: StateFlow<List<Member>> = repository.getAllMembers()
+        .catch { e -> _error.emit("Failed to load members: ${e.message}") }
+        .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

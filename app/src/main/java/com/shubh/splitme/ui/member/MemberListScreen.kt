@@ -14,6 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
+import com.shubh.splitme.ui.components.InitialsAvatar
+import com.shubh.splitme.ui.theme.CardElevation
+import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.TextSecondary
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,25 +39,51 @@ fun MemberListScreen() {
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = { TopAppBar(title = { Text("Members") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Members", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            )
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Member")
             }
         }
     ) { padding ->
         if (members.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No members yet. Add some!")
+                Text("No members yet. Add some!", color = TextSecondary)
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(vertical = 12.dp)
+            ) {
                 items(members) { member ->
-                    ListItem(
-                        headlineContent = { Text(member.name) },
-                        supportingContent = { member.email?.let { Text(it) } },
-                        leadingContent = { Icon(Icons.Default.Person, contentDescription = null) }
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            InitialsAvatar(name = member.name, size = 40)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                member.email?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TextSecondary) }
+                            }
+                        }
+                    }
                 }
             }
         }

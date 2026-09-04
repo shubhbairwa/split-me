@@ -16,7 +16,9 @@ class BillViewModel(private val repository: BillRepository) : ViewModel() {
     val error: SharedFlow<String> = _error.asSharedFlow()
 
     fun getBillsByGroup(groupId: String): StateFlow<List<BillWithShares>> {
-        return repository.getBillsByGroup(groupId).stateIn(
+        return repository.getBillsByGroup(groupId)
+            .catch { e -> _error.emit("Failed to load bills: ${e.message}") }
+            .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
