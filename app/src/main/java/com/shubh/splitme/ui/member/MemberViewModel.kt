@@ -20,6 +20,9 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
     private val _contacts = MutableStateFlow<List<ContactInfo>>(emptyList())
     val contacts: StateFlow<List<ContactInfo>> = _contacts
 
+    private val _isLoadingContacts = MutableStateFlow(false)
+    val isLoadingContacts: StateFlow<Boolean> = _isLoadingContacts
+
     val allMembers: StateFlow<List<Member>> = repository.getAllMembers()
         .catch { e -> _error.emit("Failed to load members: ${e.message}") }
         .stateIn(
@@ -29,14 +32,18 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
     )
 
     fun loadContacts(context: android.content.Context) {
+        val appContext = context.applicationContext
         viewModelScope.launch {
+            _isLoadingContacts.value = true
             try {
                 val contactList = withContext(Dispatchers.IO) {
-                    fetchContacts(context)
+                    fetchContacts(appContext)
                 }
                 _contacts.value = contactList
             } catch (e: Exception) {
                 _error.emit("Failed to load contacts: ${e.message}")
+            } finally {
+                _isLoadingContacts.value = false
             }
         }
     }

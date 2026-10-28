@@ -1,12 +1,17 @@
 package com.shubh.splitme.ui.group
 
+import com.shubh.splitme.ui.theme.tabScreenInsets
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Payment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,14 +54,16 @@ fun SettleUpScreen(
     }
 
     Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Settle Up", fontWeight = FontWeight.Bold, color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 }
             )
@@ -90,9 +97,10 @@ fun SettleUpScreen(
                         }
 
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            colors = glassCardColors(),
+                            border = glassBorder(),
                             elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                         ) {
                             Row(
@@ -131,7 +139,7 @@ fun SettleUpScreen(
                         item {
                             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PositiveGreen, modifier = Modifier.size(48.dp))
+                                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PositiveGreen, modifier = Modifier.size(48.dp))
                                     Text("Everyone is settled up!", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                                 }
                             }
@@ -139,9 +147,10 @@ fun SettleUpScreen(
                     } else {
                         item {
                             Card(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
                                 shape = MaterialTheme.shapes.medium,
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                colors = glassCardColors(),
+                                border = glassBorder(),
                                 elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
@@ -160,7 +169,7 @@ fun SettleUpScreen(
                                                 },
                                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                             ) {
-                                                Icon(Icons.Default.Payment, contentDescription = null)
+                                                Icon(Icons.Outlined.Payment, contentDescription = null)
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text("Settle Up")
                                             }

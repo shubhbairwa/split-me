@@ -1,11 +1,14 @@
 package com.shubh.splitme.ui.member
 
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,11 +41,12 @@ fun MemberListScreen() {
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Members", color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
             )
         },
         floatingActionButton = {
@@ -51,7 +55,7 @@ fun MemberListScreen() {
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Member")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Member")
             }
         }
     ) { padding ->
@@ -67,9 +71,10 @@ fun MemberListScreen() {
             ) {
                 items(members) { member ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = glassCardColors(),
+                        border = glassBorder(),
                         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                     ) {
                         Row(

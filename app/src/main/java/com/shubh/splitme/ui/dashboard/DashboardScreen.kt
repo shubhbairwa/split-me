@@ -1,10 +1,15 @@
 package com.shubh.splitme.ui.dashboard
 
+import com.shubh.splitme.ui.theme.tabScreenInsets
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,14 +53,16 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
     }
 
     Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Dashboard", fontWeight = FontWeight.Bold, color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 actions = {
                     IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = "Profile", tint = TextPrimary)
+                        Icon(Icons.Outlined.AccountCircle, contentDescription = "Profile", tint = TextPrimary)
                     }
                 }
             )
@@ -64,8 +71,9 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -98,9 +106,10 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.glassShadow(MaterialTheme.shapes.large).fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = glassCardColors(),
+                    border = glassBorder(),
                     elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -171,9 +180,10 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
                 items(state.individualBalances) { summary ->
                     val color = if (summary.balance > 0) PositiveGreen else NegativeRed
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = glassCardColors(),
+                        border = glassBorder(),
                         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                     ) {
                         Row(

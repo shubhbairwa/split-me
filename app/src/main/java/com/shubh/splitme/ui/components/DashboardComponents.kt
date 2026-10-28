@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.components
 
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -63,7 +66,7 @@ import com.shubh.splitme.ui.theme.Poppins
 import com.shubh.splitme.ui.theme.PureWhite
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
-import com.shubh.splitme.ui.theme.TrackGray
+import com.shubh.splitme.ui.theme.glassPanel
 import kotlin.math.roundToInt
 
 /** Hashes a name into a soft, stable avatar color. */
@@ -112,8 +115,7 @@ fun SegmentedTabs(
         modifier = modifier
             .fillMaxWidth()
             .height(44.dp)
-            .clip(CircleShape)
-            .background(TrackGray)
+            .glassPanel(CircleShape)
     ) {
         val tabWidth = maxWidth / options.size
         val offset by animateDpAsState(targetValue = tabWidth * selectedIndex, label = "segmentedTabOffset")
@@ -176,6 +178,10 @@ fun SpendLineChart(
     val textMeasurer = rememberTextMeasurer()
     var selectedIndex by remember(points) { mutableStateOf(points.size - 1) }
     val labelStyle = MaterialTheme.typography.labelSmall.copy(color = TextSecondary)
+    // Read theme colors here: the Canvas draw block below isn't a composable scope.
+    val bubbleColor = MaterialTheme.colorScheme.surface
+    val bubbleOutline = OutlineGray
+    val bubbleTextColor = TextPrimary
     val maxValue = points.maxOf { it.value }.let { if (it <= 0.0) 1.0 else it }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -247,7 +253,7 @@ fun SpendLineChart(
                     strokeWidth = 1.5.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
                 )
-                drawCircle(color = PureWhite, radius = 6.dp.toPx(), center = selected)
+                drawCircle(color = bubbleColor, radius = 6.dp.toPx(), center = selected)
                 drawCircle(
                     color = AccentOrangeDeep,
                     radius = 6.dp.toPx(),
@@ -258,7 +264,7 @@ fun SpendLineChart(
                 val label = valueFormatter(points[selectedIndex].value)
                 val textLayout = textMeasurer.measure(
                     AnnotatedString(label),
-                    style = TextStyle(fontFamily = Poppins, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    style = TextStyle(fontFamily = Poppins, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = bubbleTextColor)
                 )
                 val paddingH = 8.dp.toPx()
                 val paddingV = 5.dp.toPx()
@@ -268,13 +274,13 @@ fun SpendLineChart(
                 val bubbleY = (selected.y - bubbleHeight - 10.dp.toPx()).coerceAtLeast(0f)
 
                 drawRoundRect(
-                    color = PureWhite,
+                    color = bubbleColor,
                     topLeft = Offset(bubbleX, bubbleY),
                     size = Size(bubbleWidth, bubbleHeight),
                     cornerRadius = CornerRadius(8.dp.toPx())
                 )
                 drawRoundRect(
-                    color = OutlineGray,
+                    color = bubbleOutline,
                     topLeft = Offset(bubbleX, bubbleY),
                     size = Size(bubbleWidth, bubbleHeight),
                     cornerRadius = CornerRadius(8.dp.toPx()),
@@ -304,9 +310,10 @@ fun CategorySpendCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.glassShadow(RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = glassCardColors(),
+        border = glassBorder(),
         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -341,9 +348,10 @@ fun BalanceHeaderCard(
     subContent: (@Composable () -> Unit)? = null
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.glassShadow(RoundedCornerShape(28.dp)).fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = glassCardColors(),
+        border = glassBorder(),
         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Column(modifier = Modifier.padding(22.dp)) {

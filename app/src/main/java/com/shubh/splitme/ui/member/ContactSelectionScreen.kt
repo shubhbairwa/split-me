@@ -1,5 +1,13 @@
 package com.shubh.splitme.ui.member
 
+import com.shubh.splitme.ui.theme.tabScreenInsets
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,12 +15,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.RemoveCircle
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,8 +36,10 @@ import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.data.ContactInfo
+import com.shubh.splitme.data.matchesContact
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.TextPrimary
@@ -40,53 +51,69 @@ fun ContactSelectionScreen(
     selectedMembers: List<Member>,
     onAddContact: (name: String, email: String?, phone: String?) -> Unit,
     onRemoveMember: (Member) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val viewModel: MemberViewModel = viewModel(factory = MemberViewModel.Factory(app.memberRepository))
-    
+
     val contacts by viewModel.contacts.collectAsState()
+    val isLoadingContacts by viewModel.isLoadingContacts.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var showManualAdd by remember { mutableStateOf(false) }
+    var permissionRequested by rememberSaveable { mutableStateOf(false) }
 
     val contactsPermissionState = rememberPermissionState(
         android.Manifest.permission.READ_CONTACTS
-    )
+    ) { permissionRequested = true }
+    val isGranted = contactsPermissionState.status.isGranted
+    // After a denial without "rationale", Android won't show the dialog again: send the user to Settings.
+    val permanentlyDenied = !isGranted && permissionRequested &&
+        !contactsPermissionState.status.shouldShowRationale
 
-    LaunchedEffect(contactsPermissionState.status.isGranted) {
-        if (contactsPermissionState.status.isGranted) {
-            viewModel.loadContacts(context)
-        }
+    BackHandler(onBack = onBack)
+
+    LaunchedEffect(isGranted) {
+        if (isGranted) viewModel.loadContacts(context)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { snackbarHostState.showSnackbar(it) }
     }
 
     Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column {
                 TopAppBar(
                     title = { Text("Add Contacts", color = TextPrimary) },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                         }
                     }
                 )
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text("Search contacts...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    singleLine = true,
-                    shape = CircleShape,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                if (isGranted) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        placeholder = { Text("Search contacts...") },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        singleLine = true,
+                        shape = CircleShape,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                }
             }
         },
         floatingActionButton = {
@@ -95,31 +122,78 @@ fun ContactSelectionScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Manually")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Manually")
             }
         }
     ) { padding ->
-        if (!contactsPermissionState.status.isGranted) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Button(onClick = { contactsPermissionState.launchPermissionRequest() }) {
-                    Text("Grant Contacts Permission")
+        val filteredContacts = remember(contacts, searchQuery) {
+            val q = searchQuery.trim()
+            if (q.isEmpty()) contacts
+            else contacts.filter {
+                it.name.contains(q, ignoreCase = true) ||
+                    (it.phone?.contains(q) ?: false) ||
+                    (it.email?.contains(q, ignoreCase = true) ?: false)
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = padding.calculateBottomPadding() + 88.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Who is already in the group, including people added by hand or not in the phone's contacts.
+            item(key = "members_header") {
+                SectionHeader("In this group (${selectedMembers.size})")
+            }
+            if (selectedMembers.isEmpty()) {
+                item(key = "members_empty") {
+                    Text("No members yet.", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                }
+            } else {
+                items(selectedMembers, key = { "member_${it.id}" }) { member ->
+                    GroupMemberRow(member = member, onRemove = { onRemoveMember(member) })
                 }
             }
-        } else {
-            val filteredContacts = contacts.filter { 
-                it.name.contains(searchQuery, ignoreCase = true) || 
-                (it.phone?.contains(searchQuery) ?: false)
+
+            item(key = "contacts_header") {
+                Spacer(modifier = Modifier.height(8.dp))
+                SectionHeader("Phone contacts")
             }
-            
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredContacts) { contact ->
+
+            when {
+                !isGranted -> item(key = "permission") {
+                    PermissionPrompt(
+                        permanentlyDenied = permanentlyDenied,
+                        onRequest = {
+                            permissionRequested = true
+                            contactsPermissionState.launchPermissionRequest()
+                        },
+                        onOpenSettings = {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", context.packageName, null)
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    )
+                }
+                isLoadingContacts && contacts.isEmpty() -> item(key = "loading") {
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                filteredContacts.isEmpty() -> item(key = "contacts_empty") {
+                    Text(
+                        if (contacts.isEmpty()) "No contacts found on this phone. Tap + to add someone by hand."
+                        else "No contacts match \"$searchQuery\".",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                else -> items(filteredContacts, key = { "contact_${it.id}" }) { contact ->
                     val matchedMember = selectedMembers.find {
-                        (it.phoneNumber != null && it.phoneNumber == contact.phone) ||
-                        (it.name == contact.name && it.phoneNumber == null && contact.phone == null)
+                        it.matchesContact(contact.name, contact.email, contact.phone)
                     }
 
                     ContactSelectionCard(
@@ -147,18 +221,78 @@ fun ContactSelectionScreen(
 }
 
 @Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = TextSecondary,
+        fontWeight = FontWeight.SemiBold
+    )
+}
+
+@Composable
+private fun GroupMemberRow(member: Member, onRemove: () -> Unit) {
+    Card(
+        modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = glassCardColors(),
+        border = glassBorder(),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            MemberAvatar(name = member.name, photoUri = null, size = 40)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                (member.phoneNumber ?: member.email)?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+            }
+            IconButton(onClick = onRemove) {
+                Icon(
+                    Icons.Outlined.RemoveCircleOutline,
+                    contentDescription = "Remove ${member.name}",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionPrompt(permanentlyDenied: Boolean, onRequest: () -> Unit, onOpenSettings: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            if (permanentlyDenied) "Contacts access is turned off. Turn it on in Settings to pick people from your phone."
+            else "Allow access to your contacts to pick people from your phone.",
+            color = TextSecondary,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = if (permanentlyDenied) onOpenSettings else onRequest) {
+            Text(if (permanentlyDenied) "Open Settings" else "Allow Contacts Access")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            "You can also tap + to add someone by hand.",
+            color = TextSecondary,
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+
+@Composable
 fun ContactSelectionCard(contact: ContactInfo, isSelected: Boolean, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
+        modifier = Modifier.glassShadow(MaterialTheme.shapes.medium)
             .fillMaxWidth()
             .clickable { onClick() },
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surface
-        ),
+        colors = glassCardColors(selected = isSelected),
+        border = glassBorder(),
         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Row(
@@ -182,7 +316,7 @@ fun ContactSelectionCard(contact: ContactInfo, isSelected: Boolean, onClick: () 
             }
             
             Icon(
-                if (isSelected) Icons.Default.RemoveCircle else Icons.Default.Add,
+                if (isSelected) Icons.Outlined.RemoveCircleOutline else Icons.Outlined.Add,
                 contentDescription = if (isSelected) "Remove" else "Add",
                 tint = if (isSelected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )

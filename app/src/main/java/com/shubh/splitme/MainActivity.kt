@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.ui.MainScreen
 import com.shubh.splitme.ui.MainViewModel
+import com.shubh.splitme.ui.theme.GlassBackground
 import com.shubh.splitme.ui.theme.SplitMeTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +19,9 @@ class MainActivity : ComponentActivity() {
             viewModel(factory = MainViewModel.Factory(app.authRepository, app.memberRepository, app.groupRepository)) as MainViewModel
 
             SplitMeTheme {
-                MainScreen()
+                GlassBackground {
+                    MainScreen()
+                }
             }
         }
     }

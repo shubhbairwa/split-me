@@ -1,13 +1,17 @@
 package com.shubh.splitme.ui.group
 
+import com.shubh.splitme.ui.theme.tabScreenInsets
+import com.shubh.splitme.ui.theme.glassCardColors
+import com.shubh.splitme.ui.theme.glassBorder
+import com.shubh.splitme.ui.theme.glassShadow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,19 +39,20 @@ import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
 import com.shubh.splitme.ui.theme.categoryStyleFor
 import kotlin.math.abs
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
     groupWithMembers: GroupWithMembers,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    /** Open straight onto Add Contacts (from the group list menu); Back then returns to the list. */
+    startWithAddMembers: Boolean = false
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val billViewModel: BillViewModel = viewModel(factory = BillViewModel.Factory(app.billRepository))
-    val groupViewModel: GroupViewModel = viewModel(factory = GroupViewModel.Factory(app.authRepository, app.groupRepository))
+    val groupViewModel: GroupViewModel = viewModel(factory = GroupViewModel.Factory(app.authRepository, app.groupRepository, app.billRepository))
 
     // groupWithMembers is a snapshot from the moment this screen was opened (GroupListScreen
     // passes it in directly, not as a live flow). Re-derive it from the live groups list so
@@ -63,7 +68,7 @@ fun GroupDetailScreen(
     val balances by settleUpViewModel.memberBalances.collectAsState()
     var showBillEntry by remember { mutableStateOf(false) }
     var showSettleUp by remember { mutableStateOf(false) }
-    var showAddMember by remember { mutableStateOf(false) }
+    var showAddMember by remember { mutableStateOf(startWithAddMembers) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -72,6 +77,12 @@ fun GroupDetailScreen(
         }
     }
     
+    LaunchedEffect(Unit) {
+        groupViewModel.info.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     LaunchedEffect(Unit) {
         billViewModel.error.collect { message ->
             snackbarHostState.showSnackbar(message)
@@ -87,28 +98,7 @@ fun GroupDetailScreen(
         ContactSelectionScreen(
             selectedMembers = currentGroupWithMembers.members,
             onAddContact = { name, email, phone ->
-                groupViewModel.viewModelScope.launch {
-                    try {
-                        // Firestore handles member lookups
-                        // For now, let's keep it simple: Add by ID if known, or search by phone
-                        // This logic should ideally be in GroupViewModel or a UseCase
-                        // Simplifying for the refactor:
-                        val members = app.memberRepository.getAllMembers().first()
-                        val existingMember = members.find {
-                            (phone != null && it.phoneNumber == phone) || (email != null && it.email == email)
-                        }
-
-                        if (existingMember != null) {
-                            groupViewModel.addMemberToGroup(currentGroupWithMembers.group.id, existingMember.id)
-                        } else {
-                            // Create new member (Simplified, usually invite system)
-                            val savedMember = app.memberRepository.saveMember(Member(name = name, email = email, phoneNumber = phone))
-                            groupViewModel.addMemberToGroup(currentGroupWithMembers.group.id, savedMember.id)
-                        }
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar("Failed to add member: ${e.message}")
-                    }
-                }
+                groupViewModel.addContactToGroup(currentGroupWithMembers.group.id, name, email, phone)
             },
             onRemoveMember = { member ->
                 if (currentGroupWithMembers.members.size <= 1) {
@@ -119,7 +109,8 @@ fun GroupDetailScreen(
                     groupViewModel.removeMemberFromGroup(currentGroupWithMembers.group.id, member.id)
                 }
             },
-            onBack = { showAddMember = false }
+            onBack = { if (startWithAddMembers) onBack() else showAddMember = false },
+            snackbarHostState = snackbarHostState
         )
     } else if (showBillEntry) {
         BillEntryScreen(
@@ -134,19 +125,21 @@ fun GroupDetailScreen(
         )
     } else {
         Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+            containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = { Text(currentGroupWithMembers.group.name, fontWeight = FontWeight.Bold, color = TextPrimary) },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showAddMember = true }) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = "Manage Members", tint = TextPrimary)
+                            Icon(Icons.Outlined.PersonAdd, contentDescription = "Manage Members", tint = TextPrimary)
                         }
                         TextButton(onClick = { showSettleUp = true }) {
                             Text("Settle Up", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
@@ -160,7 +153,7 @@ fun GroupDetailScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Bill")
+                    Icon(Icons.Outlined.Add, contentDescription = "Add Bill")
                 }
             }
         ) { padding ->
@@ -168,9 +161,9 @@ fun GroupDetailScreen(
             val settlements = remember(balances) { suggestedSettlements(balances) }
 
             LazyColumn(
-                modifier = Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp),
+                modifier = Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize().padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                contentPadding = PaddingValues(top = 12.dp, bottom = padding.calculateBottomPadding() + 12.dp)
             ) {
                 item {
                     BalanceHeaderCard(
@@ -181,9 +174,10 @@ fun GroupDetailScreen(
 
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.glassShadow(MaterialTheme.shapes.large).fillMaxWidth(),
                         shape = MaterialTheme.shapes.large,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = glassCardColors(),
+                        border = glassBorder(),
                         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
@@ -277,9 +271,10 @@ fun GroupDetailScreen(
                         val payerName = currentGroupWithMembers.members.find { it.id == billWithShares.bill.payerId }?.name ?: "Unknown"
                         val style = categoryStyleFor(billWithShares.bill.category)
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            colors = glassCardColors(),
+                            border = glassBorder(),
                             elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                         ) {
                             Row(

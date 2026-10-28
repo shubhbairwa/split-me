@@ -1,10 +1,13 @@
 package com.shubh.splitme.ui.profile
 
+import com.shubh.splitme.ui.theme.tabScreenInsets
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,14 +52,16 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
     }
 
     Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Profile", fontWeight = FontWeight.Bold, color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 actions = {
@@ -73,9 +78,10 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(bottom = padding.calculateBottomPadding()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -87,7 +93,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.AccountCircle,
+                    Icons.Outlined.AccountCircle,
                     contentDescription = null,
                     modifier = Modifier.size(88.dp),
                     tint = AccentOrange
@@ -100,7 +106,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
+                leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) }
             )
 
             OutlinedTextField(
@@ -109,7 +115,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null) },
                 enabled = false // Usually email is changed via auth flow
             )
 

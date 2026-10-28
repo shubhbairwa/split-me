@@ -12,5 +12,8 @@ val Shapes = Shapes(
     extraLarge = RoundedCornerShape(32.dp)
 )
 
-/** Standard elevation for white cards floating on the white app background. */
-val CardElevation = 4.dp
+/**
+ * Material elevation for cards stays 0: its shadow would show through the translucent glass.
+ * Cards get their lift from Modifier.glassShadow (Glass.kt), drawn only outside the card shape.
+ */
+val CardElevation = 0.dp
