@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.group
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.categoryLabel
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
@@ -73,19 +76,19 @@ fun GroupDetailScreen(
 
     LaunchedEffect(Unit) {
         groupViewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
     
     LaunchedEffect(Unit) {
         groupViewModel.info.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
     LaunchedEffect(Unit) {
         billViewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -103,7 +106,7 @@ fun GroupDetailScreen(
             onRemoveMember = { member ->
                 if (currentGroupWithMembers.members.size <= 1) {
                     groupViewModel.viewModelScope.launch {
-                        snackbarHostState.showSnackbar("A group must have at least one member.")
+                        snackbarHostState.showSnackbar(context.getString(R.string.group_min_one_member))
                     }
                 } else {
                     groupViewModel.removeMemberFromGroup(currentGroupWithMembers.group.id, member.id)
@@ -134,15 +137,15 @@ fun GroupDetailScreen(
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showAddMember = true }) {
-                            Icon(Icons.Outlined.PersonAdd, contentDescription = "Manage Members", tint = TextPrimary)
+                            Icon(Icons.Outlined.PersonAdd, contentDescription = stringResource(R.string.group_manage_members), tint = TextPrimary)
                         }
                         TextButton(onClick = { showSettleUp = true }) {
-                            Text("Settle Up", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.group_settle_up), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         }
                     }
                 )
@@ -153,7 +156,7 @@ fun GroupDetailScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Add Bill")
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.group_add_bill))
                 }
             }
         ) { padding ->
@@ -167,7 +170,7 @@ fun GroupDetailScreen(
             ) {
                 item {
                     BalanceHeaderCard(
-                        label = "Total Group Spending",
+                        label = stringResource(R.string.group_total_spending),
                         amountText = "%.2f".format(totalSpent)
                     )
                 }
@@ -181,11 +184,11 @@ fun GroupDetailScreen(
                         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
-                            Text("Group Summary", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                            Text(stringResource(R.string.group_summary), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
                             Spacer(modifier = Modifier.height(14.dp))
 
                             if (balances.isEmpty()) {
-                                Text("No members yet.", color = TextSecondary)
+                                Text(stringResource(R.string.group_no_members), color = TextSecondary)
                             } else {
                                 balances.forEachIndexed { index, memberBalance ->
                                     val balance = memberBalance.balance
@@ -195,15 +198,15 @@ fun GroupDetailScreen(
                                         else -> TextSecondary
                                     }
                                     val statusText = when {
-                                        balance > 0.01 -> "is owed"
-                                        balance < -0.01 -> "owes"
-                                        else -> "is settled up"
+                                        balance > 0.01 -> stringResource(R.string.balance_is_owed, "%.2f".format(balance))
+                                        balance < -0.01 -> stringResource(R.string.balance_owes, "%.2f".format(abs(balance)))
+                                        else -> stringResource(R.string.balance_settled)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        InitialsAvatar(name = memberBalance.member.name, size = 36)
+                                        InitialsAvatar(name = memberBalance.member.name, size = 36, photoUrl = memberBalance.member.photoUrl)
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Text(
                                             memberBalance.member.name,
@@ -212,7 +215,7 @@ fun GroupDetailScreen(
                                             modifier = Modifier.weight(1f)
                                         )
                                         Text(
-                                            if (abs(balance) > 0.01) "$statusText ${"%.2f".format(abs(balance))}" else statusText,
+                                            statusText,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = color,
                                             fontWeight = FontWeight.Bold
@@ -225,7 +228,7 @@ fun GroupDetailScreen(
 
                                 if (settlements.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    Text("Who Owes Whom", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                    Text(stringResource(R.string.group_who_owes_whom), style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                                     Spacer(modifier = Modifier.height(10.dp))
                                     settlements.forEach { (from, to, amount) ->
                                         Row(
@@ -233,7 +236,7 @@ fun GroupDetailScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                "${from.name} owes ${to.name}",
+                                                stringResource(R.string.group_x_owes_y, from.name, to.name),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = TextPrimary,
                                                 modifier = Modifier.weight(1f)
@@ -254,7 +257,7 @@ fun GroupDetailScreen(
 
                 item {
                     Text(
-                        "Recent Bills",
+                        stringResource(R.string.group_recent_bills),
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary
                     )
@@ -263,12 +266,12 @@ fun GroupDetailScreen(
                 if (bills.isEmpty()) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text("No bills yet.", color = TextSecondary)
+                            Text(stringResource(R.string.group_no_bills_yet), color = TextSecondary)
                         }
                     }
                 } else {
                     items(bills) { billWithShares ->
-                        val payerName = currentGroupWithMembers.members.find { it.id == billWithShares.bill.payerId }?.name ?: "Unknown"
+                        val payerName = currentGroupWithMembers.members.find { it.id == billWithShares.bill.payerId }?.name ?: stringResource(R.string.unknown_person)
                         val style = categoryStyleFor(billWithShares.bill.category)
                         Card(
                             modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
@@ -292,9 +295,9 @@ fun GroupDetailScreen(
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(billWithShares.bill.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                    Text(if (billWithShares.bill.category == "SettleUp") categoryLabel("SettleUp") else billWithShares.bill.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                                     Text(
-                                        "Paid by $payerName",
+                                        stringResource(R.string.group_paid_by, payerName),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = TextSecondary
                                     )

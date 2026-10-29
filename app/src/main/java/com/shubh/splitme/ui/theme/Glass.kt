@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -120,7 +121,10 @@ val glass: GlassColors
 /** Card colors for a glass panel. Pass `selected = true` for a highlighted card. */
 @Composable
 fun glassCardColors(selected: Boolean = false): CardColors = CardDefaults.cardColors(
-    containerColor = if (selected) glass.surfaceSelected else glass.surface
+    containerColor = if (selected) glass.surfaceSelected else glass.surface,
+    // The translucent glass colors aren't theme colors, so set the text color explicitly
+    // (otherwise it falls back to black, even in dark mode).
+    contentColor = MaterialTheme.colorScheme.onSurface
 )
 
 /** The light-catching hairline edge for glass panels. */

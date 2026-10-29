@@ -1,5 +1,7 @@
 package com.shubh.splitme.ui.group
 
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.UiText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -23,8 +25,8 @@ class SettleUpViewModel(
     private val groupId: String
 ) : ViewModel() {
 
-    private val _error = MutableSharedFlow<String>()
-    val error: SharedFlow<String> = _error.asSharedFlow()
+    private val _error = MutableSharedFlow<UiText>()
+    val error: SharedFlow<UiText> = _error.asSharedFlow()
 
     val memberBalances: StateFlow<List<MemberBalance>> = combine(
         billRepository.getBillsByGroup(groupId),
@@ -33,7 +35,7 @@ class SettleUpViewModel(
         if (groupWithMembers == null) return@combine emptyList()
         calculateBalances(bills, groupWithMembers.members)
     }
-        .catch { e -> _error.emit("Failed to load balances: ${e.message}") }
+        .catch { e -> _error.emit(UiText.failure(R.string.error_load_balances, e)) }
         .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -76,7 +78,7 @@ class SettleUpViewModel(
                 )
                 billRepository.createBillWithShares(settlementBill, listOf(share))
             } catch (e: Exception) {
-                _error.emit("Failed to record settlement: ${e.message}")
+                _error.emit(UiText.failure(R.string.error_record_settlement, e))
             }
         }
     }

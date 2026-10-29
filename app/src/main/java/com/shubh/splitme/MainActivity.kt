@@ -1,7 +1,7 @@
 package com.shubh.splitme
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -10,7 +10,8 @@ import com.shubh.splitme.ui.MainViewModel
 import com.shubh.splitme.ui.theme.GlassBackground
 import com.shubh.splitme.ui.theme.SplitMeTheme
 
-class MainActivity : ComponentActivity() {
+// AppCompatActivity (not ComponentActivity) so the in-app language choice also applies on Android 12 and older.
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

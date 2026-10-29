@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="action_back">Atrás</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_add">Añadir</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_create">Crear</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_remove">Quitar</string>
+    <string name="action_ok">Aceptar</string>
+    <string name="action_more_options">Más opciones</string>
+    <string name="error_with_reason">%1$s: %2$s</string>
+    <string name="error_unknown">Algo salió mal</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_groups">Grupos</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_track_title">Controla cada gasto compartido</string>
+    <string name="onboarding_track_body">Añade gastos de viajes, compañeros de piso o cenas. Mira quién pagó qué y en qué se va el dinero, por día, semana o mes.</string>
+    <string name="onboarding_split_title">Divide gastos y salda cuentas</string>
+    <string name="onboarding_split_body">Divide a partes iguales o con importes personalizados. SplitMe calcula quién le debe a quién, para que todos salden cuentas con un toque.</string>
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_get_started">Empezar</string>
+
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Inicio</string>
+    <string name="dashboard_total_balance">Saldo total</string>
+    <string name="dashboard_you_are_owed">Te deben</string>
+    <string name="dashboard_you_owe">Debes</string>
+    <string name="dashboard_statistic">Estadísticas</string>
+    <string name="dashboard_spend">Gastos</string>
+    <string name="dashboard_no_spending">Aún no hay gastos.</string>
+    <string name="dashboard_people_summary">Resumen por persona</string>
+    <string name="dashboard_no_balances">No tienes saldos pendientes con nadie.</string>
+    <string name="dashboard_owes_you">te debe</string>
+    <string name="dashboard_you_owe_lower">le debes</string>
+    <string name="range_day">Día</string>
+    <string name="range_week">Semana</string>
+    <string name="range_month">Mes</string>
+    <string name="range_year">Año</string>
+    <string name="chart_week_of_month">S%1$d</string>
+    <string name="chart_not_enough_data">Aún no hay suficientes datos</string>
+    <string name="error_load_dashboard">No se pudieron cargar los datos del inicio</string>
+
+    <!-- Bill categories -->
+    <string name="category_general">General</string>
+    <string name="category_food">Comida</string>
+    <string name="category_transport">Transporte</string>
+    <string name="category_shopping">Compras</string>
+    <string name="category_entertainment">Ocio</string>
+    <string name="category_settle_up">Liquidación</string>
+
+    <!-- Groups list -->
+    <string name="groups_title">Grupos</string>
+    <string name="groups_add">Añadir grupo</string>
+    <string name="groups_empty">Aún no hay grupos. ¡Crea uno!</string>
+    <plurals name="group_people_count">
+        <item quantity="one">%d persona</item>
+        <item quantity="many">%d personas</item>
+        <item quantity="other">%d personas</item>
+    </plurals>
+    <string name="group_you_get">te deben %1$s</string>
+    <string name="group_you_owe">debes %1$s</string>
+    <string name="group_settled_up">cuentas saldadas</string>
+    <string name="group_total_spent">gasto total</string>
+    <string name="group_no_bills">sin gastos aún</string>
+    <string name="group_menu_add_contacts">Añadir contactos</string>
+    <string name="group_menu_delete">Eliminar grupo</string>
+    <string name="group_delete_title">¿Eliminar \"%1$s\"?</string>
+    <string name="group_delete_message">El grupo se eliminará para todos. No se puede deshacer.</string>
+    <string name="group_create_title">Crear grupo</string>
+    <string name="group_field_name">Nombre del grupo</string>
+    <string name="group_field_description">Descripción (opcional)</string>
+    <string name="error_enter_group_name">Introduce un nombre para el grupo</string>
+    <string name="error_load_groups">No se pudieron cargar los grupos</string>
+    <string name="error_load_group_totals">No se pudieron cargar los totales de los grupos</string>
+    <string name="error_create_group">No se pudo crear el grupo</string>
+    <string name="error_delete_group">No se pudo eliminar el grupo</string>
+
+    <!-- Group detail -->
+    <string name="group_manage_members">Gestionar miembros</string>
+    <string name="group_settle_up">Saldar cuentas</string>
+    <string name="group_add_bill">Añadir gasto</string>
+    <string name="group_total_spending">Gasto total del grupo</string>
+    <string name="group_summary">Resumen del grupo</string>
+    <string name="group_no_members">Aún no hay miembros.</string>
+    <string name="balance_is_owed">le deben %1$s</string>
+    <string name="balance_owes">debe %1$s</string>
+    <string name="balance_settled">está al día</string>
+    <string name="group_who_owes_whom">Quién le debe a quién</string>
+    <string name="group_x_owes_y">%1$s le debe a %2$s</string>
+    <string name="group_recent_bills">Gastos recientes</string>
+    <string name="group_no_bills_yet">Aún no hay gastos.</string>
+    <string name="group_paid_by">Pagado por %1$s</string>
+    <string name="unknown_person">Desconocido</string>
+    <string name="group_min_one_member">Un grupo debe tener al menos un miembro.</string>
+    <string name="error_add_member">No se pudo añadir al miembro</string>
+    <string name="error_remove_member">No se pudo quitar al miembro</string>
+    <string name="error_enter_a_name">Introduce un nombre</string>
+    <string name="info_added_to_group">%1$s se añadió al grupo</string>
+    <string name="error_add_person">No se pudo añadir a %1$s</string>
+
+    <!-- Bill entry -->
+    <string name="bill_title_for_group">Añadir gasto a %1$s</string>
+    <string name="bill_field_title">Título</string>
+    <string name="bill_field_amount">Importe total</string>
+    <string name="bill_field_category">Categoría</string>
+    <string name="bill_field_paid_by">Pagado por</string>
+    <string name="bill_select_payer">Elige quién pagó</string>
+    <string name="bill_split_type">Tipo de reparto:</string>
+    <string name="bill_split_equal">A partes iguales</string>
+    <string name="bill_split_manual">Manual</string>
+    <string name="bill_balanced">¡Cuadra!</string>
+    <string name="bill_remaining">Falta: %1$s</string>
+    <string name="bill_each_pays">Cada persona paga: %1$s</string>
+    <string name="error_enter_bill_title">Introduce un título para el gasto</string>
+    <string name="error_amount_positive">El importe total debe ser mayor que 0</string>
+    <string name="error_shares_mismatch">La suma de las partes (%1$s) debe ser igual al importe total (%2$s)</string>
+    <string name="error_load_bills">No se pudieron cargar los gastos</string>
+    <string name="error_add_bill">No se pudo añadir el gasto</string>
+
+    <!-- Settle up -->
+    <string name="settle_title">Saldar cuentas</string>
+    <string name="settle_net_balances">Saldos netos</string>
+    <string name="settle_no_balances">No hay saldos que mostrar.</string>
+    <string name="settle_suggested">Pagos sugeridos</string>
+    <string name="settle_all_settled">¡Todos están al día!</string>
+    <string name="settle_owes_money">%1$s debe dinero</string>
+    <string name="settle_button">Saldar</string>
+    <string name="settle_record_payment">Registrar pago</string>
+    <string name="settle_x_paying_y">%1$s le paga a %2$s</string>
+    <string name="settle_field_amount">Importe</string>
+    <string name="settle_record">Registrar</string>
+    <string name="error_load_balances">No se pudieron cargar los saldos</string>
+    <string name="error_record_settlement">No se pudo registrar el pago</string>
+
+    <!-- Contacts -->
+    <string name="contacts_title">Añadir contactos</string>
+    <string name="contacts_search">Buscar contactos…</string>
+    <string name="contacts_add_manually">Añadir manualmente</string>
+    <string name="contacts_in_group">En este grupo (%1$d)</string>
+    <string name="contacts_phone_contacts">Contactos del teléfono</string>
+    <string name="contacts_none_on_phone">No hay contactos en este teléfono. Toca + para añadir a alguien manualmente.</string>
+    <string name="contacts_no_match">Ningún contacto coincide con \"%1$s\".</string>
+    <string name="contacts_remove_person">Quitar a %1$s</string>
+    <string name="contacts_permission_off">El acceso a los contactos está desactivado. Actívalo en Ajustes para elegir personas de tu teléfono.</string>
+    <string name="contacts_permission_ask">Permite el acceso a tus contactos para elegir personas de tu teléfono.</string>
+    <string name="contacts_open_settings">Abrir Ajustes</string>
+    <string name="contacts_allow_access">Permitir acceso a contactos</string>
+    <string name="contacts_add_by_hand_hint">También puedes tocar + para añadir a alguien manualmente.</string>
+    <string name="contacts_manual_title">Añadir contacto manualmente</string>
+    <string name="field_name">Nombre</string>
+    <string name="error_load_contacts">No se pudieron cargar los contactos</string>
+    <string name="error_load_members">No se pudieron cargar los miembros</string>
+    <string name="error_enter_member_name">Introduce el nombre del miembro</string>
+    <string name="error_save_member">No se pudo guardar el miembro</string>
+
+    <!-- Members (legacy list) -->
+    <string name="members_title">Miembros</string>
+    <string name="members_add">Añadir miembro</string>
+    <string name="members_empty">Aún no hay miembros. ¡Añade algunos!</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Editar perfil</string>
+    <string name="profile_log_out">Cerrar sesión</string>
+    <string name="profile_field_full_name">Nombre completo</string>
+    <string name="profile_hint_full_name">Tu nombre completo</string>
+    <string name="profile_field_mobile">Número de móvil</string>
+    <string name="profile_field_dob">Fecha de nacimiento</string>
+    <string name="profile_hint_dob">Elige tu fecha de nacimiento</string>
+    <string name="profile_field_location">Ubicación (opcional)</string>
+    <string name="profile_hint_location">Ciudad, país</string>
+    <string name="profile_field_language">Idioma</string>
+    <string name="profile_submit">Enviar</string>
+    <string name="profile_logout_title">¿Cerrar sesión?</string>
+    <string name="profile_logout_message">Tendrás que volver a iniciar sesión para ver tus grupos.</string>
+    <string name="profile_logout_confirm">Cerrar sesión</string>
+    <string name="profile_saved">Perfil guardado</string>
+    <string name="error_load_profile">No se pudo cargar el perfil</string>
+    <string name="error_save_profile">No se pudo guardar el perfil</string>
+    <string name="error_not_signed_in">Tienes que iniciar sesión para guardar tu perfil</string>
+
+    <string name="language_system">Idioma del sistema</string>
+
+    <!-- Profile validation -->
+    <string name="validation_name_required">Introduce tu nombre completo</string>
+    <string name="validation_name_short">El nombre debe tener al menos 2 caracteres</string>
+    <string name="validation_name_long">El nombre no puede tener más de 50 caracteres</string>
+    <string name="validation_name_chars">El nombre solo puede contener letras, espacios, . \' y -</string>
+    <string name="validation_dob_required">Elige tu fecha de nacimiento</string>
+    <string name="validation_dob_future">La fecha de nacimiento no puede ser futura</string>
+    <string name="validation_dob_min_age">Debes tener al menos %1$d años</string>
+    <string name="validation_dob_invalid">Introduce una fecha de nacimiento válida</string>
+    <string name="validation_location_long">La ubicación no puede tener más de 100 caracteres</string>
+
+    <!-- Phone sign-in and profile picture -->
+    <string name="auth_welcome_title">Bienvenido a splitMe</string>
+    <string name="auth_phone_subtitle">Introduce tu número de móvil para iniciar sesión o crear una cuenta.</string>
+    <string name="auth_mobile_number">Número de móvil</string>
+    <string name="auth_sms_note">Te enviaremos un código de 6 dígitos por SMS para verificar tu número. Pueden aplicarse cargos por SMS.</string>
+    <string name="auth_send_code">Enviar código</string>
+    <string name="auth_code_title">Introduce el código</string>
+    <string name="auth_code_subtitle">Hemos enviado un código de 6 dígitos al %1$s</string>
+    <string name="auth_change_number">Cambiar número</string>
+    <string name="auth_resend_in">Reenviar código en %1$s</string>
+    <string name="auth_resend">Reenviar código</string>
+    <string name="auth_verify">Verificar</string>
+    <string name="auth_name_title">¿Cómo te llamas?</string>
+    <string name="auth_name_subtitle">Tus amigos lo verán en los grupos y los gastos.</string>
+    <string name="auth_continue">Continuar</string>
+    <string name="auth_error_phone_required">Introduce tu número de móvil</string>
+    <string name="auth_error_phone_invalid">No es un número de móvil válido para el país seleccionado</string>
+    <string name="auth_error_code_incomplete">Introduce el código de 6 dígitos</string>
+    <string name="auth_error_code_wrong">El código no es correcto. Revisa el SMS e inténtalo de nuevo.</string>
+    <string name="auth_error_code_expired">El código ha caducado. Toca Reenviar código para recibir uno nuevo.</string>
+    <string name="auth_error_too_many">Demasiados intentos. Espera un rato e inténtalo de nuevo.</string>
+    <string name="auth_error_quota">Se ha alcanzado el límite de SMS por ahora. Inténtalo más tarde.</string>
+    <string name="auth_error_not_configured">El inicio de sesión con teléfono aún no está configurado en esta app. Inténtalo más tarde.</string>
+    <string name="auth_error_network">No hay conexión a internet. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="auth_error_generic">No se pudo iniciar sesión</string>
+    <string name="auth_error_save_name">No se pudo guardar tu nombre</string>
+    <string name="phone_choose_country">Elegir país</string>
+    <string name="phone_search_country">Buscar país o prefijo</string>
+    <string name="profile_mobile_verified">Número verificado con el que inicias sesión</string>
+    <string name="profile_photo">Foto de perfil</string>
+    <string name="profile_change_photo">Cambiar foto de perfil</string>
+    <string name="profile_choose_photo">Elegir foto</string>
+    <string name="profile_remove_photo">Quitar foto</string>
+    <string name="profile_photo_updated">Foto de perfil actualizada</string>
+    <string name="profile_photo_removed">Foto de perfil quitada</string>
+    <string name="error_upload_photo">No se pudo actualizar la foto de perfil</string>
+</resources>

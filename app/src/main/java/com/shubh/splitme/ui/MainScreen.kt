@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +15,7 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +28,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
+import com.shubh.splitme.data.OnboardingPreferences
+import com.shubh.splitme.ui.onboarding.OnboardingScreen
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import com.shubh.splitme.ui.auth.AuthViewModel
-import com.shubh.splitme.ui.auth.LoginScreen
-import com.shubh.splitme.ui.auth.SignupScreen
+import com.shubh.splitme.ui.auth.AuthFlowScreen
 import com.shubh.splitme.ui.dashboard.DashboardScreen
 import com.shubh.splitme.ui.group.GroupListScreen
 import com.shubh.splitme.ui.profile.ProfileScreen
@@ -44,19 +51,25 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 
 sealed class Screen(val route: String) {
-    object Login : Screen("login")
-    object Signup : Screen("signup")
     object Dashboard : Screen("dashboard")
     object Groups : Screen("groups")
     object Profile : Screen("profile")
+
+    companion object {
+        fun fromRoute(route: String): Screen = when (route) {
+            Groups.route -> Groups
+            Profile.route -> Profile
+            else -> Dashboard
+        }
+    }
 }
 
-private data class TabItem(val screen: Screen, val label: String, val selectedIcon: ImageVector, val icon: ImageVector)
+private data class TabItem(val screen: Screen, @StringRes val label: Int, val selectedIcon: ImageVector, val icon: ImageVector)
 
 private val Tabs = listOf(
-    TabItem(Screen.Dashboard, "Dashboard", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    TabItem(Screen.Groups, "Groups", Icons.Filled.Group, Icons.Outlined.Group),
-    TabItem(Screen.Profile, "Profile", Icons.Filled.Person, Icons.Outlined.Person)
+    TabItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+    TabItem(Screen.Groups, R.string.nav_groups, Icons.Filled.Group, Icons.Outlined.Group),
+    TabItem(Screen.Profile, R.string.nav_profile, Icons.Filled.Person, Icons.Outlined.Person)
 )
 
 private val NavBarShape = RoundedCornerShape(28.dp)
@@ -67,17 +80,45 @@ fun MainScreen() {
     val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
 
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
+    // Saved by route so the open tab survives the screen being rebuilt (e.g. after changing the
+    // app language), instead of jumping back to the Dashboard.
+    var currentRoute by rememberSaveable { mutableStateOf(Screen.Dashboard.route) }
+    val currentScreen = Screen.fromRoute(currentRoute)
+    // Last login state we reacted to; null until the first check.
+    var handledLoggedIn by rememberSaveable { mutableStateOf<Boolean?>(null) }
+
+    // Intro slides on first launch. null while the saved flag loads, so nothing flashes.
+    val context = LocalContext.current
+    val onboardingPrefs = remember { OnboardingPreferences(context.applicationContext) }
+    val onboardingDone by onboardingPrefs.isDone.map<Boolean, Boolean?> { it }.collectAsState(initial = null)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(isLoggedIn) {
-        currentScreen = if (isLoggedIn) Screen.Dashboard else Screen.Login
+        // Only on an actual login/logout (or first launch), not on every rebuild of the screen.
+        if (handledLoggedIn != isLoggedIn) {
+            // After signing in (or out), always start on the Dashboard.
+            if (handledLoggedIn != null) currentRoute = Screen.Dashboard.route
+            handledLoggedIn = isLoggedIn
+        }
+    }
+
+    // Onboarding is shown once per install. The flag is saved on this device as soon as the user
+    // taps Skip or Get Started, and is never reset (logging out doesn't bring it back). People
+    // who are already signed in (e.g. updating from a version without onboarding) skip it.
+    LaunchedEffect(onboardingDone, isLoggedIn) {
+        if (onboardingDone == false && isLoggedIn) onboardingPrefs.markDone()
+    }
+    when (onboardingDone) {
+        null -> return
+        false -> {
+            if (!isLoggedIn) OnboardingScreen(onFinish = { scope.launch { onboardingPrefs.markDone() } })
+            return
+        }
+        true -> Unit
     }
 
     if (!isLoggedIn) {
-        when (currentScreen) {
-            is Screen.Signup -> SignupScreen(onLoginClick = { currentScreen = Screen.Login })
-            else -> LoginScreen(onSignupClick = { currentScreen = Screen.Signup })
-        }
+        AuthFlowScreen(authViewModel)
         return
     }
 
@@ -85,10 +126,10 @@ fun MainScreen() {
         when (currentScreen) {
             is Screen.Groups -> GroupListScreen()
             is Screen.Profile -> ProfileScreen(
-                onBack = { currentScreen = Screen.Dashboard },
+                onBack = { currentRoute = Screen.Dashboard.route },
                 onLogout = { authViewModel.logout() }
             )
-            else -> DashboardScreen(onNavigateToProfile = { currentScreen = Screen.Profile })
+            else -> DashboardScreen(onNavigateToProfile = { currentRoute = Screen.Profile.route })
         }
     }
 
@@ -104,9 +145,9 @@ fun MainScreen() {
                         val selected = currentScreen == tab.screen
                         NavigationRailItem(
                             icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                            label = { Text(tab.label) },
+                            label = { Text(stringResource(tab.label)) },
                             selected = selected,
-                            onClick = { currentScreen = tab.screen },
+                            onClick = { currentRoute = tab.screen.route },
                             colors = NavigationRailItemDefaults.colors(
                                 selectedIconColor = PureWhite,
                                 indicatorColor = AccentOrange,
@@ -137,7 +178,7 @@ fun MainScreen() {
                 GlassBottomBar(
                     hazeState = hazeState,
                     currentScreen = currentScreen,
-                    onSelect = { currentScreen = it },
+                    onSelect = { currentRoute = it.route },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = systemNavBar + bottomMargin, start = 16.dp, end = 16.dp)
@@ -184,7 +225,7 @@ private fun GlassBottomBar(
                 val selected = currentScreen == tab.screen
                 NavigationBarItem(
                     icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                    label = { Text(tab.label) },
+                    label = { Text(stringResource(tab.label)) },
                     selected = selected,
                     onClick = { onSelect(tab.screen) },
                     colors = NavigationBarItemDefaults.colors(

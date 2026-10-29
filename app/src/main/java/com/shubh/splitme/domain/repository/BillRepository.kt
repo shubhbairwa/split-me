@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface BillRepository {
     fun getBillsByGroup(groupId: String): Flow<List<BillWithShares>>
-    fun getAllBillsWithShares(): Flow<List<BillWithShares>>
+    /** Bills of all the given groups, kept up to date. Only groups the user belongs to are readable. */
+    fun getBillsForGroups(groupIds: List<String>): Flow<List<BillWithShares>>
     suspend fun createBillWithShares(bill: Bill, shares: List<ExpenseShare>)
     fun getBillWithSharesById(billId: String): Flow<BillWithShares?>
     suspend fun deleteBill(billId: String)

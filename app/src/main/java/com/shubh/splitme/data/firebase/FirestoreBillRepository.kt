@@ -8,6 +8,8 @@ import com.shubh.splitme.domain.repository.BillRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -36,24 +38,12 @@ class FirestoreBillRepository : BillRepository {
         awaitClose { listener.remove() }
     }
 
-    override fun getAllBillsWithShares(): Flow<List<BillWithShares>> = callbackFlow {
-        val listener = billsCollection.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val bills = snapshot.toObjects(Bill::class.java)
-                launch {
-                    val list = bills.map { bill ->
-                        val shares = sharesCollection.whereEqualTo("billId", bill.id).get().await().toObjects(ExpenseShare::class.java)
-                        BillWithShares(bill, shares)
-                    }
-                    trySend(list)
-                }
-            }
-        }
-        awaitClose { listener.remove() }
+    // One listener per group rather than one on the whole collection: security rules only let
+    // members read a group's bills, so a collection-wide listener would be rejected.
+    override fun getBillsForGroups(groupIds: List<String>): Flow<List<BillWithShares>> {
+        val ids = groupIds.distinct()
+        if (ids.isEmpty()) return flowOf(emptyList())
+        return combine(ids.map { getBillsByGroup(it) }) { perGroup -> perGroup.flatMap { it } }
     }
 
     override suspend fun createBillWithShares(bill: Bill, shares: List<ExpenseShare>) {

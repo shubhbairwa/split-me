@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.bill
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.categoryLabel
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.shubh.splitme.domain.model.ExpenseShare
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.theme.TextPrimary
+import com.shubh.splitme.ui.theme.TextSecondary
 import com.shubh.splitme.ui.theme.categoryStyleFor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +40,7 @@ fun BillEntryScreen(
 
     LaunchedEffect(Unit) {
         billViewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -64,11 +68,11 @@ fun BillEntryScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Add Bill to $groupName", color = TextPrimary) },
+                title = { Text(stringResource(R.string.bill_title_for_group, groupName), color = TextPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
                     }
                 },
                 actions = {
@@ -93,7 +97,7 @@ fun BillEntryScreen(
                         },
                         enabled = title.isNotBlank() && totalAmount > 0 && payer != null
                     ) {
-                        Icon(Icons.Outlined.Check, contentDescription = "Save", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Outlined.Check, contentDescription = stringResource(R.string.action_save), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             )
@@ -111,7 +115,7 @@ fun BillEntryScreen(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
+                    label = { Text(stringResource(R.string.bill_field_title)) },
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -121,7 +125,7 @@ fun BillEntryScreen(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amountText = it },
-                    label = { Text("Total Amount") },
+                    label = { Text(stringResource(R.string.bill_field_amount)) },
                     shape = MaterialTheme.shapes.medium,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
@@ -136,10 +140,10 @@ fun BillEntryScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         OutlinedTextField(
-                            value = category,
+                            value = categoryLabel(category),
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Category") },
+                            label = { Text(stringResource(R.string.bill_field_category)) },
                             shape = MaterialTheme.shapes.medium,
                             leadingIcon = {
                                 val style = categoryStyleFor(category)
@@ -155,7 +159,7 @@ fun BillEntryScreen(
                             categories.forEach { cat ->
                                 val style = categoryStyleFor(cat)
                                 DropdownMenuItem(
-                                    text = { Text(cat) },
+                                    text = { Text(categoryLabel(cat)) },
                                     leadingIcon = { Icon(style.icon, contentDescription = null, tint = style.badgeColor) },
                                     onClick = {
                                         category = cat
@@ -172,10 +176,10 @@ fun BillEntryScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         OutlinedTextField(
-                            value = payer?.name ?: "Select Payer",
+                            value = payer?.name ?: stringResource(R.string.bill_select_payer),
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Paid By") },
+                            label = { Text(stringResource(R.string.bill_field_paid_by)) },
                             shape = MaterialTheme.shapes.medium,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showPayerMenu) },
                             modifier = Modifier.menuAnchor()
@@ -203,12 +207,12 @@ fun BillEntryScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Split Type:", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                    Text(stringResource(R.string.bill_split_type), style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                     Spacer(modifier = Modifier.width(16.dp))
                     FilterChip(
                         selected = !isManualSplit,
                         onClick = { isManualSplit = false },
-                        label = { Text("Equal") },
+                        label = { Text(stringResource(R.string.bill_split_equal)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = Color.White
@@ -218,7 +222,7 @@ fun BillEntryScreen(
                     FilterChip(
                         selected = isManualSplit,
                         onClick = { isManualSplit = true },
-                        label = { Text("Manual") },
+                        label = { Text(stringResource(R.string.bill_split_manual)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = Color.White
@@ -249,7 +253,7 @@ fun BillEntryScreen(
                     val remaining = totalAmount - currentTotal
                     val isBalanced = kotlin.math.abs(remaining) < 0.01
                     Text(
-                        text = if (isBalanced) "Balanced!" else "Remaining: ${"%.2f".format(remaining)}",
+                        text = if (isBalanced) stringResource(R.string.bill_balanced) else stringResource(R.string.bill_remaining, "%.2f".format(remaining)),
                         color = if (isBalanced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -257,7 +261,7 @@ fun BillEntryScreen(
             } else {
                 item {
                     val share = if (members.isNotEmpty()) totalAmount / members.size else 0.0
-                    Text("Each person pays: ${"%.2f".format(share)}", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.bill_each_pays, "%.2f".format(share)), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                 }
             }
         }

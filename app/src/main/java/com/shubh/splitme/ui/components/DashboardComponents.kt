@@ -1,5 +1,11 @@
 package com.shubh.splitme.ui.components
 
+import com.shubh.splitme.ui.common.rememberPhotoModel
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.dashboard.text
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
 import com.shubh.splitme.ui.theme.glassShadow
@@ -85,7 +91,9 @@ fun InitialsAvatar(
     name: String,
     modifier: Modifier = Modifier,
     size: Int = 44,
-    color: Color = colorForName(name)
+    color: Color = colorForName(name),
+    /** Profile picture; the initial shows underneath while it loads or if there is none. */
+    photoUrl: String? = null
 ) {
     Box(
         modifier = modifier
@@ -100,6 +108,15 @@ fun InitialsAvatar(
             fontWeight = FontWeight.Bold,
             fontSize = (size / 2.5).sp
         )
+        val photo = rememberPhotoModel(photoUrl)
+        if (photo != null) {
+            AsyncImage(
+                model = photo,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        }
     }
 }
 
@@ -170,7 +187,7 @@ fun SpendLineChart(
             modifier = modifier.fillMaxWidth().height(180.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text("Not enough data yet", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.chart_not_enough_data), color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
         }
         return
     }
@@ -296,7 +313,7 @@ fun SpendLineChart(
         Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             points.forEach { p ->
-                Text(p.label, style = labelStyle, maxLines = 1)
+                Text(p.label.text(), style = labelStyle, maxLines = 1)
             }
         }
     }

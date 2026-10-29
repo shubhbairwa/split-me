@@ -1,5 +1,7 @@
 package com.shubh.splitme.ui.member
 
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.UiText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,8 +16,8 @@ import kotlinx.coroutines.withContext
 
 class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
 
-    private val _error = MutableSharedFlow<String>()
-    val error: SharedFlow<String> = _error.asSharedFlow()
+    private val _error = MutableSharedFlow<UiText>()
+    val error: SharedFlow<UiText> = _error.asSharedFlow()
 
     private val _contacts = MutableStateFlow<List<ContactInfo>>(emptyList())
     val contacts: StateFlow<List<ContactInfo>> = _contacts
@@ -24,7 +26,7 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
     val isLoadingContacts: StateFlow<Boolean> = _isLoadingContacts
 
     val allMembers: StateFlow<List<Member>> = repository.getAllMembers()
-        .catch { e -> _error.emit("Failed to load members: ${e.message}") }
+        .catch { e -> _error.emit(UiText.failure(R.string.error_load_members, e)) }
         .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -41,7 +43,7 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
                 }
                 _contacts.value = contactList
             } catch (e: Exception) {
-                _error.emit("Failed to load contacts: ${e.message}")
+                _error.emit(UiText.failure(R.string.error_load_contacts, e))
             } finally {
                 _isLoadingContacts.value = false
             }
@@ -50,7 +52,7 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
 
     fun addMember(name: String, email: String?, phoneNumber: String? = null) {
         if (name.isBlank()) {
-            viewModelScope.launch { _error.emit("Please enter a member name") }
+            viewModelScope.launch { _error.emit(UiText.of(R.string.error_enter_member_name)) }
             return
         }
 
@@ -58,7 +60,7 @@ class MemberViewModel(private val repository: MemberRepository) : ViewModel() {
             try {
                 repository.saveMember(Member(name = name, email = email, phoneNumber = phoneNumber))
             } catch (e: Exception) {
-                _error.emit("Failed to save member: ${e.message}")
+                _error.emit(UiText.failure(R.string.error_save_member, e))
             }
         }
     }

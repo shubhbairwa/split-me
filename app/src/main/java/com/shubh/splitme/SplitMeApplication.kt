@@ -2,6 +2,8 @@ package com.shubh.splitme
 
 import android.app.Application
 import com.shubh.splitme.data.firebase.FirebaseAuthRepository
+import com.shubh.splitme.data.firebase.FirestoreProfilePhotoRepository
+import com.shubh.splitme.domain.repository.ProfilePhotoRepository
 import com.shubh.splitme.data.firebase.FirestoreBillRepository
 import com.shubh.splitme.data.firebase.FirestoreGroupRepository
 import com.shubh.splitme.data.firebase.FirestoreMemberRepository
@@ -17,4 +19,5 @@ class SplitMeApplication : Application() {
     val memberRepository: MemberRepository by lazy { FirestoreMemberRepository() }
     val groupRepository: GroupRepository by lazy { FirestoreGroupRepository() }
     val billRepository: BillRepository by lazy { FirestoreBillRepository() }
+    val photoRepository: ProfilePhotoRepository by lazy { FirestoreProfilePhotoRepository() }
 }

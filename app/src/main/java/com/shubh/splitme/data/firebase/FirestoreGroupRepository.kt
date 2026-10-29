@@ -1,6 +1,6 @@
 package com.shubh.splitme.data.firebase
 
-import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.shubh.splitme.data.matchesContact
@@ -23,11 +23,19 @@ class FirestoreGroupRepository : GroupRepository {
     // contact, removing a member) show up straight away, also offline, and there is no
     // per-change server query (the old whereIn lookup was slow, could apply out of order and
     // failed for groups with more than 30 members).
-    override fun getGroupsWithMembers(): Flow<List<GroupWithMembers>> =
-        combine(groupsCollection.liveObjects(Group::class.java), allMembersFlow()) { groups, members ->
+    //
+    // Only the user's own groups are listened to: ones they belong to, plus ones they created
+    // (even if they later left): two queries, merged by id.
+    override fun getGroupsWithMembers(userId: String): Flow<List<GroupWithMembers>> {
+        val asMember = groupsCollection.whereArrayContains("memberIds", userId).liveObjects(Group::class.java)
+        val asCreator = groupsCollection.whereEqualTo("createdBy", userId).liveObjects(Group::class.java)
+        return combine(asMember, asCreator, allMembersFlow()) { memberOf, created, members ->
             val byId = members.associateBy { it.id }
-            groups.map { group -> GroupWithMembers(group, group.memberIds.mapNotNull { byId[it] }) }
+            (memberOf + created).distinctBy { it.id }
+                .sortedBy { it.name.lowercase() }
+                .map { group -> GroupWithMembers(group, group.memberIds.mapNotNull { byId[it] }) }
         }
+    }
 
     override fun getGroupWithMembersById(groupId: String): Flow<GroupWithMembers?> =
         combine(groupDocFlow(groupId), allMembersFlow()) { group, members ->
@@ -37,9 +45,14 @@ class FirestoreGroupRepository : GroupRepository {
             }
         }
 
-    override suspend fun createGroup(group: Group): String {
+    override suspend fun createGroup(group: Group, creatorId: String): String {
         val docRef = groupsCollection.document()
-        val groupWithId = group.copy(id = docRef.id)
+        // Creator and first member are written together, so the group is never briefly ownerless.
+        val groupWithId = group.copy(
+            id = docRef.id,
+            createdBy = creatorId,
+            memberIds = (listOf(creatorId) + group.memberIds).distinct()
+        )
         docRef.set(groupWithId).await()
         return docRef.id
     }
@@ -49,37 +62,45 @@ class FirestoreGroupRepository : GroupRepository {
     }
 
     override suspend fun addContactToGroup(groupId: String, name: String, email: String?, phone: String?): Member {
+        val groupRef = groupsCollection.document(groupId)
         val existing = membersCollection.get().await()
             .toObjects(Member::class.java)
-            .firstOrNull { it.id.isNotBlank() && it.matchesContact(name, email, phone) }
+            .filter { it.id.isNotBlank() && it.matchesContact(name, email, phone) }
+            // A real account wins over a leftover contact entry with the same number.
+            .maxByOrNull { it.hasAccount }
         if (existing != null) {
-            addMemberToGroup(groupId, existing.id)
+            val batch = firestore.batch().update(groupRef, "memberIds", FieldValue.arrayUnion(existing.id))
+            invitePhone(existing)?.let { batch.update(groupRef, "invitedPhones", FieldValue.arrayUnion(it)) }
+            batch.commit().await()
             return existing
         }
 
         // New member: create it and add it to the group in one atomic write.
         val memberRef = membersCollection.document()
         val member = Member(id = memberRef.id, name = name.trim(), email = email?.trim(), phoneNumber = phone?.trim())
-        firestore.batch()
+        val batch = firestore.batch()
             .set(memberRef, member)
-            .update(groupsCollection.document(groupId), "memberIds", FieldValue.arrayUnion(member.id))
-            .commit()
-            .await()
+            .update(groupRef, "memberIds", FieldValue.arrayUnion(member.id))
+        invitePhone(member)?.let { batch.update(groupRef, "invitedPhones", FieldValue.arrayUnion(it)) }
+        batch.commit().await()
         return member
     }
 
     override suspend fun removeMemberFromGroup(groupId: String, memberId: String) {
-        groupsCollection.document(groupId).update("memberIds", FieldValue.arrayRemove(memberId)).await()
+        val groupRef = groupsCollection.document(groupId)
+        val member = runCatching { membersCollection.document(memberId).get().await().toObject(Member::class.java) }.getOrNull()
+        val batch = firestore.batch().update(groupRef, "memberIds", FieldValue.arrayRemove(memberId))
+        // Someone removed before signing up must not be able to join through their invite.
+        member?.let(::invitePhone)?.let { batch.update(groupRef, "invitedPhones", FieldValue.arrayRemove(it)) }
+        batch.commit().await()
     }
+
+    /** The E.164 number to invite with, for contacts who don't have an account yet. */
+    private fun invitePhone(member: Member): String? =
+        member.phoneNumber?.trim()?.takeIf { !member.hasAccount && it.startsWith("+") }
 
     override suspend fun deleteGroup(groupId: String) {
         groupsCollection.document(groupId).delete().await()
-    }
-
-    override suspend fun getGroupsWithMembersOnce(): List<GroupWithMembers> {
-        val groups = groupsCollection.get().await().toObjects(Group::class.java)
-        val byId = membersCollection.get().await().toObjects(Member::class.java).associateBy { it.id }
-        return groups.map { group -> GroupWithMembers(group, group.memberIds.mapNotNull { byId[it] }) }
     }
 
     private fun allMembersFlow(): Flow<List<Member>> = membersCollection.liveObjects(Member::class.java)
@@ -95,7 +116,7 @@ class FirestoreGroupRepository : GroupRepository {
         awaitClose { listener.remove() }
     }
 
-    private fun <T : Any> CollectionReference.liveObjects(type: Class<T>): Flow<List<T>> = callbackFlow {
+    private fun <T : Any> Query.liveObjects(type: Class<T>): Flow<List<T>> = callbackFlow {
         val listener = addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)

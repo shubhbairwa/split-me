@@ -1,10 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">splitMe</string>
-    <string name="members">Members</string>
-    <string name="groups">Groups</string>
-    <string name="add_member">Add Member</string>
-    <string name="create_group">Create Group</string>
-    <string name="no_members">No members yet. Add some!</string>
-    <string name="no_groups">No groups yet. Create one!</string>
-    <string name="add_to_group">Add Member to Group</string>
+    <string name="app_name" translatable="false">splitMe</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add">Add</string>
+    <string name="action_save">Save</string>
+    <string name="action_create">Create</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_ok">OK</string>
+    <string name="action_more_options">More options</string>
+    <string name="error_with_reason">%1$s: %2$s</string>
+    <string name="error_unknown">Something went wrong</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_groups">Groups</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_track_title">Track every shared expense</string>
+    <string name="onboarding_track_body">Add bills for trips, flatmates or dinners out. See who paid what and where the money goes, by day, week or month.</string>
+    <string name="onboarding_split_title">Split bills and settle up</string>
+    <string name="onboarding_split_body">Split equally or by custom amounts. SplitMe works out who owes whom, so everyone can settle up in a tap.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_total_balance">Total Balance</string>
+    <string name="dashboard_you_are_owed">You are owed</string>
+    <string name="dashboard_you_owe">You owe</string>
+    <string name="dashboard_statistic">Statistic</string>
+    <string name="dashboard_spend">Spend</string>
+    <string name="dashboard_no_spending">No spending yet.</string>
+    <string name="dashboard_people_summary">People Summary</string>
+    <string name="dashboard_no_balances">No active balances with others.</string>
+    <string name="dashboard_owes_you">owes you</string>
+    <string name="dashboard_you_owe_lower">you owe</string>
+    <string name="range_day">Day</string>
+    <string name="range_week">Week</string>
+    <string name="range_month">Month</string>
+    <string name="range_year">Year</string>
+    <!-- Chart label for week N of the month, e.g. "W2" -->
+    <string name="chart_week_of_month">W%1$d</string>
+    <string name="chart_not_enough_data">Not enough data yet</string>
+    <string name="error_load_dashboard">Failed to load dashboard data</string>
+
+    <!-- Bill categories (stored in Firestore as English keys; only the label is translated) -->
+    <string name="category_general">General</string>
+    <string name="category_food">Food</string>
+    <string name="category_transport">Transport</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="category_entertainment">Entertainment</string>
+    <string name="category_settle_up">Settlement</string>
+
+    <!-- Groups list -->
+    <string name="groups_title">Groups</string>
+    <string name="groups_add">Add Group</string>
+    <string name="groups_empty">No groups yet. Create one!</string>
+    <plurals name="group_people_count">
+        <item quantity="one">%d person</item>
+        <item quantity="other">%d people</item>
+    </plurals>
+    <string name="group_you_get">you get %1$s</string>
+    <string name="group_you_owe">you owe %1$s</string>
+    <string name="group_settled_up">settled up</string>
+    <string name="group_total_spent">total spent</string>
+    <string name="group_no_bills">no bills yet</string>
+    <string name="group_menu_add_contacts">Add contacts</string>
+    <string name="group_menu_delete">Delete group</string>
+    <string name="group_delete_title">Delete \"%1$s\"?</string>
+    <string name="group_delete_message">This removes the group for everyone. This can\'t be undone.</string>
+    <string name="group_create_title">Create Group</string>
+    <string name="group_field_name">Group Name</string>
+    <string name="group_field_description">Description (Optional)</string>
+    <string name="error_enter_group_name">Please enter a group name</string>
+    <string name="error_load_groups">Failed to load groups</string>
+    <string name="error_load_group_totals">Failed to load group totals</string>
+    <string name="error_create_group">Failed to create group</string>
+    <string name="error_delete_group">Failed to delete group</string>
+
+    <!-- Group detail -->
+    <string name="group_manage_members">Manage Members</string>
+    <string name="group_settle_up">Settle Up</string>
+    <string name="group_add_bill">Add Bill</string>
+    <string name="group_total_spending">Total Group Spending</string>
+    <string name="group_summary">Group Summary</string>
+    <string name="group_no_members">No members yet.</string>
+    <string name="balance_is_owed">is owed %1$s</string>
+    <string name="balance_owes">owes %1$s</string>
+    <string name="balance_settled">is settled up</string>
+    <string name="group_who_owes_whom">Who Owes Whom</string>
+    <string name="group_x_owes_y">%1$s owes %2$s</string>
+    <string name="group_recent_bills">Recent Bills</string>
+    <string name="group_no_bills_yet">No bills yet.</string>
+    <string name="group_paid_by">Paid by %1$s</string>
+    <string name="unknown_person">Unknown</string>
+    <string name="group_min_one_member">A group must have at least one member.</string>
+    <string name="error_add_member">Failed to add member</string>
+    <string name="error_remove_member">Failed to remove member</string>
+    <string name="error_enter_a_name">Please enter a name</string>
+    <string name="info_added_to_group">Added %1$s to the group</string>
+    <string name="error_add_person">Failed to add %1$s</string>
+
+    <!-- Bill entry -->
+    <string name="bill_title_for_group">Add Bill to %1$s</string>
+    <string name="bill_field_title">Title</string>
+    <string name="bill_field_amount">Total Amount</string>
+    <string name="bill_field_category">Category</string>
+    <string name="bill_field_paid_by">Paid By</string>
+    <string name="bill_select_payer">Select Payer</string>
+    <string name="bill_split_type">Split Type:</string>
+    <string name="bill_split_equal">Equal</string>
+    <string name="bill_split_manual">Manual</string>
+    <string name="bill_balanced">Balanced!</string>
+    <string name="bill_remaining">Remaining: %1$s</string>
+    <string name="bill_each_pays">Each person pays: %1$s</string>
+    <string name="error_enter_bill_title">Please enter a bill title</string>
+    <string name="error_amount_positive">Total amount must be greater than 0</string>
+    <string name="error_shares_mismatch">Total shares (%1$s) must equal total amount (%2$s)</string>
+    <string name="error_load_bills">Failed to load bills</string>
+    <string name="error_add_bill">Failed to add bill</string>
+
+    <!-- Settle up -->
+    <string name="settle_title">Settle Up</string>
+    <string name="settle_net_balances">Net Balances</string>
+    <string name="settle_no_balances">No balances to show.</string>
+    <string name="settle_suggested">Suggested Settlements</string>
+    <string name="settle_all_settled">Everyone is settled up!</string>
+    <string name="settle_owes_money">%1$s owes money</string>
+    <string name="settle_button">Settle Up</string>
+    <string name="settle_record_payment">Record Payment</string>
+    <string name="settle_x_paying_y">%1$s is paying %2$s</string>
+    <string name="settle_field_amount">Amount</string>
+    <string name="settle_record">Record</string>
+    <string name="error_load_balances">Failed to load balances</string>
+    <string name="error_record_settlement">Failed to record settlement</string>
+
+    <!-- Contacts -->
+    <string name="contacts_title">Add Contacts</string>
+    <string name="contacts_search">Search contacts…</string>
+    <string name="contacts_add_manually">Add Manually</string>
+    <string name="contacts_in_group">In this group (%1$d)</string>
+    <string name="contacts_phone_contacts">Phone contacts</string>
+    <string name="contacts_none_on_phone">No contacts found on this phone. Tap + to add someone by hand.</string>
+    <string name="contacts_no_match">No contacts match \"%1$s\".</string>
+    <string name="contacts_remove_person">Remove %1$s</string>
+    <string name="contacts_permission_off">Contacts access is turned off. Turn it on in Settings to pick people from your phone.</string>
+    <string name="contacts_permission_ask">Allow access to your contacts to pick people from your phone.</string>
+    <string name="contacts_open_settings">Open Settings</string>
+    <string name="contacts_allow_access">Allow Contacts Access</string>
+    <string name="contacts_add_by_hand_hint">You can also tap + to add someone by hand.</string>
+    <string name="contacts_manual_title">Add Contact Manually</string>
+    <string name="field_name">Name</string>
+    <string name="error_load_contacts">Failed to load contacts</string>
+    <string name="error_load_members">Failed to load members</string>
+    <string name="error_enter_member_name">Please enter a member name</string>
+    <string name="error_save_member">Failed to save member</string>
+
+    <!-- Members (legacy list) -->
+    <string name="members_title">Members</string>
+    <string name="members_add">Add Member</string>
+    <string name="members_empty">No members yet. Add some!</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Edit Profile</string>
+    <string name="profile_log_out">Log out</string>
+    <string name="profile_field_full_name">Full Name</string>
+    <string name="profile_hint_full_name">Your full name</string>
+    <string name="profile_field_mobile">Mobile Number</string>
+    <string name="profile_field_dob">Date of Birth</string>
+    <string name="profile_hint_dob">Select your date of birth</string>
+    <string name="profile_field_location">Location (optional)</string>
+    <string name="profile_hint_location">City, Country</string>
+    <string name="profile_field_language">Language</string>
+    <string name="profile_submit">Submit</string>
+    <string name="profile_logout_title">Log out?</string>
+    <string name="profile_logout_message">You\'ll need to sign in again to see your groups.</string>
+    <string name="profile_logout_confirm">Log Out</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="error_load_profile">Failed to load profile</string>
+    <string name="error_save_profile">Failed to save profile</string>
+    <string name="error_not_signed_in">You need to be signed in to save your profile</string>
+
+    <!-- Language picker. Language names are written in their own language on purpose. -->
+    <string name="language_system">System default</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_hindi" translatable="false">हिन्दी</string>
+    <string name="language_spanish" translatable="false">Español</string>
+
+    <!-- Profile validation -->
+    <string name="validation_name_required">Please enter your full name</string>
+    <string name="validation_name_short">Name must be at least 2 characters</string>
+    <string name="validation_name_long">Name must be 50 characters or fewer</string>
+    <string name="validation_name_chars">Name can only contain letters, spaces, . \' and -</string>
+    <string name="validation_dob_required">Please select your date of birth</string>
+    <string name="validation_dob_future">Date of birth can\'t be in the future</string>
+    <string name="validation_dob_min_age">You must be at least %1$d years old</string>
+    <string name="validation_dob_invalid">Please enter a valid date of birth</string>
+    <string name="validation_location_long">Location must be 100 characters or fewer</string>
+
+    <!-- Phone sign-in and profile picture -->
+    <string name="auth_welcome_title">Welcome to splitMe</string>
+    <string name="auth_phone_subtitle">Enter your mobile number to sign in or create an account.</string>
+    <string name="auth_mobile_number">Mobile number</string>
+    <string name="auth_sms_note">We\'ll send a 6-digit code by SMS to verify your number. SMS charges may apply.</string>
+    <string name="auth_send_code">Send code</string>
+    <string name="auth_code_title">Enter the code</string>
+    <string name="auth_code_subtitle">We sent a 6-digit code to %1$s</string>
+    <string name="auth_change_number">Change number</string>
+    <string name="auth_resend_in">Resend code in %1$s</string>
+    <string name="auth_resend">Resend code</string>
+    <string name="auth_verify">Verify</string>
+    <string name="auth_name_title">What\'s your name?</string>
+    <string name="auth_name_subtitle">Friends will see this in groups and bills.</string>
+    <string name="auth_continue">Continue</string>
+    <string name="auth_error_phone_required">Please enter your mobile number</string>
+    <string name="auth_error_phone_invalid">That isn\'t a valid mobile number for the selected country</string>
+    <string name="auth_error_code_incomplete">Enter the 6-digit code</string>
+    <string name="auth_error_code_wrong">That code isn\'t right. Check the SMS and try again.</string>
+    <string name="auth_error_code_expired">This code has expired. Tap Resend code to get a new one.</string>
+    <string name="auth_error_too_many">Too many attempts. Please wait a while and try again.</string>
+    <string name="auth_error_quota">The SMS limit has been reached for now. Please try again later.</string>
+    <string name="auth_error_not_configured">Phone sign-in isn\'t set up for this app yet. Please try again later.</string>
+    <string name="auth_error_network">No internet connection. Check your connection and try again.</string>
+    <string name="auth_error_generic">Couldn\'t sign in</string>
+    <string name="auth_error_save_name">Couldn\'t save your name</string>
+    <string name="phone_choose_country">Choose country</string>
+    <string name="phone_search_country">Search country or code</string>
+    <string name="profile_mobile_verified">Verified number you sign in with</string>
+    <string name="profile_photo">Profile picture</string>
+    <string name="profile_change_photo">Change profile picture</string>
+    <string name="profile_choose_photo">Choose photo</string>
+    <string name="profile_remove_photo">Remove photo</string>
+    <string name="profile_photo_updated">Profile picture updated</string>
+    <string name="profile_photo_removed">Profile picture removed</string>
+    <string name="error_upload_photo">Couldn\'t update profile picture</string>
 </resources>

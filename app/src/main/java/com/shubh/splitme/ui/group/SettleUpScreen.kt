@@ -1,5 +1,7 @@
 package com.shubh.splitme.ui.group
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
@@ -49,7 +51,7 @@ fun SettleUpScreen(
 
     LaunchedEffect(Unit) {
         viewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -59,11 +61,11 @@ fun SettleUpScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Settle Up", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                title = { Text(stringResource(R.string.settle_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
                     }
                 }
             )
@@ -71,7 +73,7 @@ fun SettleUpScreen(
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp)) {
             Text(
-                "Net Balances",
+                stringResource(R.string.settle_net_balances),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 modifier = Modifier.padding(vertical = 12.dp)
@@ -79,7 +81,7 @@ fun SettleUpScreen(
 
             if (balances.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No balances to show.", color = TextSecondary)
+                    Text(stringResource(R.string.settle_no_balances), color = TextSecondary)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -91,9 +93,9 @@ fun SettleUpScreen(
                             else -> TextSecondary
                         }
                         val text = when {
-                            balance > 0.01 -> "is owed ${"%.2f".format(balance)}"
-                            balance < -0.01 -> "owes ${"%.2f".format(abs(balance))}"
-                            else -> "is settled up"
+                            balance > 0.01 -> stringResource(R.string.balance_is_owed, "%.2f".format(balance))
+                            balance < -0.01 -> stringResource(R.string.balance_owes, "%.2f".format(abs(balance)))
+                            else -> stringResource(R.string.balance_settled)
                         }
 
                         Card(
@@ -107,7 +109,7 @@ fun SettleUpScreen(
                                 modifier = Modifier.padding(14.dp).fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                InitialsAvatar(name = memberBalance.member.name, size = 40)
+                                InitialsAvatar(name = memberBalance.member.name, size = 40, photoUrl = memberBalance.member.photoUrl)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(memberBalance.member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
@@ -126,7 +128,7 @@ fun SettleUpScreen(
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Suggested Settlements",
+                            stringResource(R.string.settle_suggested),
                             style = MaterialTheme.typography.titleMedium,
                             color = TextPrimary
                         )
@@ -140,7 +142,7 @@ fun SettleUpScreen(
                             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PositiveGreen, modifier = Modifier.size(48.dp))
-                                    Text("Everyone is settled up!", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                                    Text(stringResource(R.string.settle_all_settled), style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                                 }
                             }
                         }
@@ -160,7 +162,7 @@ fun SettleUpScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text("${debtor.member.name} owes money", color = TextPrimary)
+                                            Text(stringResource(R.string.settle_owes_money, debtor.member.name), color = TextPrimary)
                                             Button(
                                                 onClick = {
                                                     if (creditors.isNotEmpty()) {
@@ -171,7 +173,7 @@ fun SettleUpScreen(
                                             ) {
                                                 Icon(Icons.Outlined.Payment, contentDescription = null)
                                                 Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Settle Up")
+                                                Text(stringResource(R.string.settle_button))
                                             }
                                         }
                                     }
@@ -216,15 +218,15 @@ fun SettleUpDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Record Payment") },
+        title = { Text(stringResource(R.string.settle_record_payment)) },
         text = {
             Column {
-                Text("${from.name} is paying ${to.name}")
+                Text(stringResource(R.string.settle_x_paying_y, from.name, to.name))
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amountText = it },
-                    label = { Text("Amount") },
+                    label = { Text(stringResource(R.string.settle_field_amount)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -234,12 +236,12 @@ fun SettleUpDialog(
                 val amount = amountText.toDoubleOrNull() ?: 0.0
                 if (amount > 0) onConfirm(amount)
             }) {
-                Text("Record")
+                Text(stringResource(R.string.settle_record))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

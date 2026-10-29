@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.group
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import androidx.compose.ui.res.pluralStringResource
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
@@ -48,7 +51,7 @@ fun GroupListScreen() {
 
     LaunchedEffect(Unit) {
         groupViewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -70,7 +73,7 @@ fun GroupListScreen() {
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
-                    title = { Text("Groups", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = { Text(stringResource(R.string.groups_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
                 )
             },
@@ -80,14 +83,14 @@ fun GroupListScreen() {
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Add Group")
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.groups_add))
                 }
             }
         ) { padding ->
             Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
                 if (groups.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No groups yet. Create one!", color = TextSecondary)
+                        Text(stringResource(R.string.groups_empty), color = TextSecondary)
                     }
                 } else {
                     LazyColumn(
@@ -127,18 +130,18 @@ fun GroupListScreen() {
             groupToDelete?.let { group ->
                 AlertDialog(
                     onDismissRequest = { groupToDelete = null },
-                    title = { Text("Delete \"${group.name}\"?") },
-                    text = { Text("This removes the group for everyone. This can't be undone.") },
+                    title = { Text(stringResource(R.string.group_delete_title, group.name)) },
+                    text = { Text(stringResource(R.string.group_delete_message)) },
                     confirmButton = {
                         TextButton(onClick = {
                             groupViewModel.deleteGroup(group.id)
                             groupToDelete = null
                         }) {
-                            Text("Delete", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { groupToDelete = null }) { Text("Cancel") }
+                        TextButton(onClick = { groupToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
                     }
                 )
             }
@@ -191,7 +194,7 @@ private fun GroupCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        if (members.size == 1) "1 person" else "${members.size} people",
+                        pluralStringResource(R.plurals.group_people_count, members.size, members.size),
                         style = MaterialTheme.typography.labelMedium,
                         color = TextSecondary
                     )
@@ -212,11 +215,11 @@ private fun GroupCard(
 
             Box {
                 IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Outlined.MoreVert, contentDescription = "More options", tint = TextPrimary)
+                    Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.action_more_options), tint = TextPrimary)
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     DropdownMenuItem(
-                        text = { Text("Add contacts") },
+                        text = { Text(stringResource(R.string.group_menu_add_contacts)) },
                         leadingIcon = { Icon(Icons.Outlined.PersonAdd, contentDescription = null) },
                         onClick = {
                             menuOpen = false
@@ -224,7 +227,7 @@ private fun GroupCard(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Delete group", color = MaterialTheme.colorScheme.error) },
+                        text = { Text(stringResource(R.string.group_menu_delete), color = MaterialTheme.colorScheme.error) },
                         leadingIcon = {
                             Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         },
@@ -252,11 +255,11 @@ private fun GroupAmount(summary: GroupSummary?) {
             color = TextPrimary
         )
         val (label, color) = when {
-            total <= 0.0 -> "no bills yet" to TextSecondary
-            mine == null -> "total spent" to TextSecondary
-            mine > 0.01 -> "you get %.2f".format(mine) to PositiveGreen
-            mine < -0.01 -> "you owe %.2f".format(abs(mine)) to NegativeRed
-            else -> "settled up" to TextSecondary
+            total <= 0.0 -> stringResource(R.string.group_no_bills) to TextSecondary
+            mine == null -> stringResource(R.string.group_total_spent) to TextSecondary
+            mine > 0.01 -> stringResource(R.string.group_you_get, "%.2f".format(mine)) to PositiveGreen
+            mine < -0.01 -> stringResource(R.string.group_you_owe, "%.2f".format(abs(mine))) to NegativeRed
+            else -> stringResource(R.string.group_settled_up) to TextSecondary
         }
         Text(label, style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.SemiBold)
     }
@@ -269,20 +272,20 @@ fun AddGroupDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create Group") },
+        title = { Text(stringResource(R.string.group_create_title)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Group Name") },
+                    label = { Text(stringResource(R.string.group_field_name)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("Description (Optional)") },
+                    label = { Text(stringResource(R.string.group_field_description)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -292,12 +295,12 @@ fun AddGroupDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Unit) {
                 onClick = { if (name.isNotBlank()) onAdd(name, desc.ifBlank { null }) },
                 enabled = name.isNotBlank()
             ) {
-                Text("Create")
+                Text(stringResource(R.string.action_create))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

@@ -1,5 +1,7 @@
 package com.shubh.splitme.ui.dashboard
 
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.UiText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -7,6 +9,7 @@ import com.shubh.splitme.domain.model.BillWithShares
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.domain.repository.AuthRepository
 import com.shubh.splitme.domain.repository.BillRepository
+import com.shubh.splitme.domain.repository.GroupRepository
 import com.shubh.splitme.domain.repository.MemberRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -14,7 +17,7 @@ import java.util.Calendar
 
 enum class TimeRange { DAY, WEEK, MONTH, YEAR }
 
-data class ChartPoint(val label: String, val value: Double)
+data class ChartPoint(val label: ChartLabel, val value: Double)
 
 data class CategorySpend(val category: String, val amount: Double, val percent: Float)
 
@@ -29,6 +32,7 @@ data class DashboardState(
 
 data class MemberSummary(
     val memberName: String,
+    val photoUrl: String?,
     val balance: Double // Positive: they owe me, Negative: I owe them
 )
 
@@ -36,22 +40,28 @@ data class MemberSummary(
 class DashboardViewModel(
     private val authRepository: AuthRepository,
     private val billRepository: BillRepository,
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
 
-    private val _error = MutableSharedFlow<String>()
-    val error: SharedFlow<String> = _error.asSharedFlow()
+    private val _error = MutableSharedFlow<UiText>()
+    val error: SharedFlow<UiText> = _error.asSharedFlow()
 
     val state: StateFlow<DashboardState> = authRepository.currentUser
         .flatMapLatest { user ->
             if (user != null) {
+                // Only bills from the user's own groups (the only ones they're allowed to read).
+                val myBills = groupRepository.getGroupsWithMembers(user.id)
+                    .map { groups -> groups.map { it.group.id } }
+                    .distinctUntilChanged()
+                    .flatMapLatest { ids -> billRepository.getBillsForGroups(ids) }
                 combine(
-                    billRepository.getAllBillsWithShares(),
+                    myBills,
                     memberRepository.getAllMembers()
                 ) { bills, members ->
                     calculateDashboardState(bills, members, user.id)
                 }.catch { e ->
-                    _error.emit("Failed to load dashboard data: ${e.message}")
+                    _error.emit(UiText.failure(R.string.error_load_dashboard, e))
                 }
             } else {
                 flowOf(DashboardState())
@@ -95,7 +105,7 @@ class DashboardViewModel(
 
         val individualBalances = members.filter { it.id != meId }
             .map { member ->
-                MemberSummary(member.name, balancesMap[member.id] ?: 0.0)
+                MemberSummary(member.name, member.photoUrl, balancesMap[member.id] ?: 0.0)
             }
             .filter { kotlin.math.abs(it.balance) > 0.01 }
             .sortedByDescending { it.balance }
@@ -113,7 +123,7 @@ class DashboardViewModel(
     private fun buildSpendSeries(bills: List<BillWithShares>, range: TimeRange): List<ChartPoint> {
         val now = Calendar.getInstance()
 
-        fun bucketLabelsAndSums(bucketCount: Int, bucketOf: (Calendar) -> Int?, labelOf: (Int) -> String): List<ChartPoint> {
+        fun bucketLabelsAndSums(bucketCount: Int, bucketOf: (Calendar) -> Int?, labelOf: (Int) -> ChartLabel): List<ChartPoint> {
             val sums = DoubleArray(bucketCount)
             bills.forEach { billWithShares ->
                 val cal = Calendar.getInstance().apply { timeInMillis = billWithShares.bill.date }
@@ -127,7 +137,6 @@ class DashboardViewModel(
 
         return when (range) {
             TimeRange.DAY -> {
-                val hourLabels = listOf("00:00", "04:00", "08:00", "12:00", "16:00", "20:00")
                 bucketLabelsAndSums(
                     bucketCount = 6,
                     bucketOf = { cal ->
@@ -135,11 +144,11 @@ class DashboardViewModel(
                             cal.get(Calendar.HOUR_OF_DAY) / 4
                         } else null
                     },
-                    labelOf = { hourLabels[it] }
+                    labelOf = { ChartLabel.Hour(it * 4) }
                 )
             }
             TimeRange.WEEK -> {
-                val weekLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                val weekDays = listOf(Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY)
                 val startOfWeek = (now.clone() as Calendar).apply {
                     firstDayOfWeek = Calendar.MONDAY
                     set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
@@ -150,7 +159,7 @@ class DashboardViewModel(
                         val diffDays = ((cal.timeInMillis - startOfWeek.timeInMillis) / (24 * 60 * 60 * 1000L)).toInt()
                         if (diffDays in 0..6) diffDays else null
                     },
-                    labelOf = { weekLabels[it] }
+                    labelOf = { ChartLabel.Weekday(weekDays[it]) }
                 )
             }
             TimeRange.MONTH -> {
@@ -161,17 +170,16 @@ class DashboardViewModel(
                             ((cal.get(Calendar.DAY_OF_MONTH) - 1) / 7).coerceAtMost(4)
                         } else null
                     },
-                    labelOf = { "W${it + 1}" }
+                    labelOf = { ChartLabel.WeekOfMonth(it + 1) }
                 )
             }
             TimeRange.YEAR -> {
-                val monthLabels = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
                 bucketLabelsAndSums(
                     bucketCount = 12,
                     bucketOf = { cal ->
                         if (cal.get(Calendar.YEAR) == now.get(Calendar.YEAR)) cal.get(Calendar.MONTH) else null
                     },
-                    labelOf = { monthLabels[it] }
+                    labelOf = { ChartLabel.Month(it) }
                 )
             }
         }
@@ -196,11 +204,12 @@ class DashboardViewModel(
     class Factory(
         private val authRepository: AuthRepository,
         private val billRepository: BillRepository,
-        private val memberRepository: MemberRepository
+        private val memberRepository: MemberRepository,
+        private val groupRepository: GroupRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return DashboardViewModel(authRepository, billRepository, memberRepository) as T
+            return DashboardViewModel(authRepository, billRepository, memberRepository, groupRepository) as T
         }
     }
 }

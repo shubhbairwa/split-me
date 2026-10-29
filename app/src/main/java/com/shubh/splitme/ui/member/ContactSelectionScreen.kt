@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.member
 
+import com.shubh.splitme.ui.common.rememberPhotoModel
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
@@ -39,6 +42,10 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.data.ContactInfo
+import androidx.annotation.StringRes
+import com.shubh.splitme.ui.profile.validateName
+import com.shubh.splitme.ui.components.PhoneNumberInput
+import com.shubh.splitme.data.PhoneNumbers
 import com.shubh.splitme.data.matchesContact
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.theme.CardElevation
@@ -59,6 +66,7 @@ fun ContactSelectionScreen(
     val viewModel: MemberViewModel = viewModel(factory = MemberViewModel.Factory(app.memberRepository))
 
     val contacts by viewModel.contacts.collectAsState()
+    val defaultIso = remember { PhoneNumbers.defaultCountry(context).iso }
     val isLoadingContacts by viewModel.isLoadingContacts.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var showManualAdd by remember { mutableStateOf(false) }
@@ -79,7 +87,7 @@ fun ContactSelectionScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.error.collect { snackbarHostState.showSnackbar(it) }
+        viewModel.error.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
 
     Scaffold(
@@ -89,11 +97,11 @@ fun ContactSelectionScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Add Contacts", color = TextPrimary) },
+                    title = { Text(stringResource(R.string.contacts_title), color = TextPrimary) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
                         }
                     }
                 )
@@ -104,7 +112,7 @@ fun ContactSelectionScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                        placeholder = { Text("Search contacts...") },
+                        placeholder = { Text(stringResource(R.string.contacts_search)) },
                         leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                         singleLine = true,
                         shape = CircleShape,
@@ -122,7 +130,7 @@ fun ContactSelectionScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add Manually")
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.contacts_add_manually))
             }
         }
     ) { padding ->
@@ -143,11 +151,11 @@ fun ContactSelectionScreen(
         ) {
             // Who is already in the group, including people added by hand or not in the phone's contacts.
             item(key = "members_header") {
-                SectionHeader("In this group (${selectedMembers.size})")
+                SectionHeader(stringResource(R.string.contacts_in_group, selectedMembers.size))
             }
             if (selectedMembers.isEmpty()) {
                 item(key = "members_empty") {
-                    Text("No members yet.", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.group_no_members), color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
                 items(selectedMembers, key = { "member_${it.id}" }) { member ->
@@ -157,7 +165,7 @@ fun ContactSelectionScreen(
 
             item(key = "contacts_header") {
                 Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader("Phone contacts")
+                SectionHeader(stringResource(R.string.contacts_phone_contacts))
             }
 
             when {
@@ -185,8 +193,8 @@ fun ContactSelectionScreen(
                 }
                 filteredContacts.isEmpty() -> item(key = "contacts_empty") {
                     Text(
-                        if (contacts.isEmpty()) "No contacts found on this phone. Tap + to add someone by hand."
-                        else "No contacts match \"$searchQuery\".",
+                        if (contacts.isEmpty()) stringResource(R.string.contacts_none_on_phone)
+                        else stringResource(R.string.contacts_no_match, searchQuery),
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -201,7 +209,8 @@ fun ContactSelectionScreen(
                         isSelected = matchedMember != null,
                         onClick = {
                             if (matchedMember != null) onRemoveMember(matchedMember)
-                            else onAddContact(contact.name, contact.email, contact.phone)
+                            // Store numbers as E.164 so the person is recognised when they sign up.
+                            else onAddContact(contact.name, contact.email, PhoneNumbers.toE164(contact.phone, defaultIso) ?: contact.phone)
                         }
                     )
                 }
@@ -240,18 +249,18 @@ private fun GroupMemberRow(member: Member, onRemove: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            MemberAvatar(name = member.name, photoUri = null, size = 40)
+            MemberAvatar(name = member.name, photoUri = member.photoUrl, size = 40)
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                (member.phoneNumber ?: member.email)?.let {
+                (member.phoneNumber?.let { PhoneNumbers.formatInternational(it) } ?: member.email)?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                 }
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Outlined.RemoveCircleOutline,
-                    contentDescription = "Remove ${member.name}",
+                    contentDescription = stringResource(R.string.contacts_remove_person, member.name),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -266,18 +275,18 @@ private fun PermissionPrompt(permanentlyDenied: Boolean, onRequest: () -> Unit, 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            if (permanentlyDenied) "Contacts access is turned off. Turn it on in Settings to pick people from your phone."
-            else "Allow access to your contacts to pick people from your phone.",
+            if (permanentlyDenied) stringResource(R.string.contacts_permission_off)
+            else stringResource(R.string.contacts_permission_ask),
             color = TextSecondary,
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(12.dp))
         Button(onClick = if (permanentlyDenied) onOpenSettings else onRequest) {
-            Text(if (permanentlyDenied) "Open Settings" else "Allow Contacts Access")
+            Text(if (permanentlyDenied) stringResource(R.string.contacts_open_settings) else stringResource(R.string.contacts_allow_access))
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "You can also tap + to add someone by hand.",
+            stringResource(R.string.contacts_add_by_hand_hint),
             color = TextSecondary,
             style = MaterialTheme.typography.bodySmall
         )
@@ -317,7 +326,7 @@ fun ContactSelectionCard(contact: ContactInfo, isSelected: Boolean, onClick: () 
             
             Icon(
                 if (isSelected) Icons.Outlined.RemoveCircleOutline else Icons.Outlined.Add,
-                contentDescription = if (isSelected) "Remove" else "Add",
+                contentDescription = if (isSelected) stringResource(R.string.action_remove) else stringResource(R.string.action_add),
                 tint = if (isSelected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
         }
@@ -343,9 +352,10 @@ fun MemberAvatar(name: String, photoUri: String?, size: Int = 48) {
             .background(color),
         contentAlignment = Alignment.Center
     ) {
-        if (photoUri != null) {
+        val photo = rememberPhotoModel(photoUri)
+        if (photo != null) {
             AsyncImage(
-                model = photoUri,
+                model = photo,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -361,50 +371,70 @@ fun MemberAvatar(name: String, photoUri: String?, size: Int = 48) {
     }
 }
 
+/** Add someone who isn't in the phone's contacts: name + mobile number (with country). */
 @Composable
 fun AddMemberDialog(onDismiss: () -> Unit, onAdd: (String, String?, String?) -> Unit) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    var countryIso by remember { mutableStateOf(PhoneNumbers.defaultCountry(context).iso) }
+    val country = remember(countryIso) { PhoneNumbers.country(countryIso) ?: PhoneNumbers.defaultCountry(context) }
     var phone by remember { mutableStateOf("") }
+    @StringRes var nameError by remember { mutableStateOf<Int?>(null) }
+    @StringRes var phoneError by remember { mutableStateOf<Int?>(null) }
+
+    val submit = {
+        val e164 = PhoneNumbers.toE164(phone, country)
+        nameError = validateName(name)
+        phoneError = when {
+            phone.isBlank() -> R.string.auth_error_phone_required
+            e164 == null -> R.string.auth_error_phone_invalid
+            else -> null
+        }
+        if (nameError == null && phoneError == null) onAdd(name.trim(), null, e164)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Contact Manually") },
+        title = { Text(stringResource(R.string.contacts_manual_title)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
+                    onValueChange = {
+                        name = it
+                        nameError = null
+                    },
+                    label = { Text(stringResource(R.string.field_name)) },
+                    isError = nameError != null,
+                    supportingText = nameError?.let { { Text(stringResource(it)) } },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email (Optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone (Optional)") },
-                    modifier = Modifier.fillMaxWidth()
+                PhoneNumberInput(
+                    country = country,
+                    onCountryChange = {
+                        countryIso = it.iso
+                        phoneError = null
+                    },
+                    number = phone,
+                    onNumberChange = {
+                        phone = it
+                        phoneError = null
+                    },
+                    error = phoneError,
+                    onImeAction = { submit() }
                 )
             }
         },
         confirmButton = {
-            Button(
-                onClick = { if (name.isNotBlank()) onAdd(name, email.ifBlank { null }, phone.ifBlank { null }) },
-                enabled = name.isNotBlank()
-            ) {
-                Text("Add")
+            Button(onClick = { submit() }) {
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

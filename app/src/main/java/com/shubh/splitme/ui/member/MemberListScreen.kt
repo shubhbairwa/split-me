@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.member
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import com.shubh.splitme.data.PhoneNumbers
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
 import com.shubh.splitme.ui.theme.glassShadow
@@ -36,7 +39,7 @@ fun MemberListScreen() {
 
     LaunchedEffect(Unit) {
         viewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -45,7 +48,7 @@ fun MemberListScreen() {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Members", color = TextPrimary) },
+                title = { Text(stringResource(R.string.members_title), color = TextPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
             )
         },
@@ -55,13 +58,13 @@ fun MemberListScreen() {
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add Member")
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.members_add))
             }
         }
     ) { padding ->
         if (members.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No members yet. Add some!", color = TextSecondary)
+                Text(stringResource(R.string.members_empty), color = TextSecondary)
             }
         } else {
             LazyColumn(
@@ -81,11 +84,11 @@ fun MemberListScreen() {
                             modifier = Modifier.padding(14.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            InitialsAvatar(name = member.name, size = 40)
+                            InitialsAvatar(name = member.name, size = 40, photoUrl = member.photoUrl)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(member.name, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                                member.email?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TextSecondary) }
+                                member.phoneNumber?.let { Text(PhoneNumbers.formatInternational(it), style = MaterialTheme.typography.bodyMedium, color = TextSecondary) }
                             }
                         }
                     }
@@ -96,52 +99,12 @@ fun MemberListScreen() {
         if (showAddDialog) {
             AddMemberDialog(
                 onDismiss = { showAddDialog = false },
-                onAdd = { name, email ->
-                    viewModel.addMember(name, email)
+                // Same name + mobile number dialog as the Add Contacts screen.
+                onAdd = { name, _, phone ->
+                    viewModel.addMember(name, email = null, phoneNumber = phone)
                     showAddDialog = false
                 }
             )
         }
     }
-}
-
-@Composable
-fun AddMemberDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Member") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email (Optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { if (name.isNotBlank()) onAdd(name, email.ifBlank { null }) },
-                enabled = name.isNotBlank()
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }

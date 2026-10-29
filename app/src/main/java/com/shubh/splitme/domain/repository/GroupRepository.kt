@@ -6,9 +6,11 @@ import com.shubh.splitme.domain.model.Member
 import kotlinx.coroutines.flow.Flow
 
 interface GroupRepository {
-    fun getGroupsWithMembers(): Flow<List<GroupWithMembers>>
+    /** Groups [userId] is a member of or created, with their members, kept up to date. */
+    fun getGroupsWithMembers(userId: String): Flow<List<GroupWithMembers>>
     fun getGroupWithMembersById(groupId: String): Flow<GroupWithMembers?>
-    suspend fun createGroup(group: Group): String
+    /** Creates the group with [creatorId] as its creator and first member; returns the new id. */
+    suspend fun createGroup(group: Group, creatorId: String): String
     suspend fun addMemberToGroup(groupId: String, memberId: String)
 
     /**
@@ -18,5 +20,4 @@ interface GroupRepository {
     suspend fun addContactToGroup(groupId: String, name: String, email: String?, phone: String?): Member
     suspend fun removeMemberFromGroup(groupId: String, memberId: String)
     suspend fun deleteGroup(groupId: String)
-    suspend fun getGroupsWithMembersOnce(): List<GroupWithMembers>
 }

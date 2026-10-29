@@ -1,5 +1,8 @@
 package com.shubh.splitme.ui.dashboard
 
+import androidx.compose.ui.res.stringResource
+import com.shubh.splitme.R
+import com.shubh.splitme.ui.common.categoryLabel
 import com.shubh.splitme.ui.theme.tabScreenInsets
 import com.shubh.splitme.ui.theme.glassCardColors
 import com.shubh.splitme.ui.theme.glassBorder
@@ -37,18 +40,18 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as SplitMeApplication
     val viewModel: DashboardViewModel = viewModel(
-        factory = DashboardViewModel.Factory(app.authRepository, app.billRepository, app.memberRepository)
+        factory = DashboardViewModel.Factory(app.authRepository, app.billRepository, app.memberRepository, app.groupRepository)
     )
 
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedRangeIndex by remember { mutableIntStateOf(1) }
     val ranges = TimeRange.entries
-    val rangeLabels = listOf("Day", "Week", "Month", "Year")
+    val rangeLabels = listOf(stringResource(R.string.range_day), stringResource(R.string.range_week), stringResource(R.string.range_month), stringResource(R.string.range_year))
 
     LaunchedEffect(Unit) {
         viewModel.error.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
 
@@ -58,11 +61,11 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                title = { Text(stringResource(R.string.dashboard_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 actions = {
                     IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Outlined.AccountCircle, contentDescription = "Profile", tint = TextPrimary)
+                        Icon(Icons.Outlined.AccountCircle, contentDescription = stringResource(R.string.nav_profile), tint = TextPrimary)
                     }
                 }
             )
@@ -78,13 +81,13 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
         ) {
             item {
                 BalanceHeaderCard(
-                    label = "Total Balance",
+                    label = stringResource(R.string.dashboard_total_balance),
                     amountText = "${if (state.netBalance >= 0) "+" else ""}${"%.2f".format(state.netBalance)}",
                     amountColor = if (state.netBalance >= 0) PositiveGreen else NegativeRed,
                     subContent = {
                         Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                             Column {
-                                Text("You are owed", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                                Text(stringResource(R.string.dashboard_you_are_owed), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                                 Text(
                                     "%.2f".format(state.totalOwedToMe),
                                     style = MaterialTheme.typography.titleMedium,
@@ -92,7 +95,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
                                 )
                             }
                             Column {
-                                Text("You owe", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                                Text(stringResource(R.string.dashboard_you_owe), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                                 Text(
                                     "%.2f".format(state.totalIOwe),
                                     style = MaterialTheme.typography.titleMedium,
@@ -113,7 +116,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
                     elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Statistic", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                        Text(stringResource(R.string.dashboard_statistic), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
                         Spacer(modifier = Modifier.height(16.dp))
                         SegmentedTabs(
                             options = rangeLabels,
@@ -127,13 +130,13 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
             }
 
             item {
-                Text("Spend", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                Text(stringResource(R.string.dashboard_spend), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
             }
 
             if (state.categoryBreakdown.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text("No spending yet.", color = TextSecondary)
+                        Text(stringResource(R.string.dashboard_no_spending), color = TextSecondary)
                     }
                 }
             } else {
@@ -148,7 +151,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
                                 rowItems.forEach { spend ->
                                     CategorySpendCard(
                                         style = categoryStyleFor(spend.category),
-                                        category = spend.category,
+                                        category = categoryLabel(spend.category),
                                         percent = spend.percent,
                                         modifier = Modifier.weight(1f)
                                     )
@@ -164,7 +167,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
             item {
                 Text(
-                    "People Summary",
+                    stringResource(R.string.dashboard_people_summary),
                     style = MaterialTheme.typography.titleLarge,
                     color = TextPrimary
                 )
@@ -173,7 +176,7 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
             if (state.individualBalances.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("No active balances with others.", color = TextSecondary)
+                        Text(stringResource(R.string.dashboard_no_balances), color = TextSecondary)
                     }
                 }
             } else {
@@ -190,12 +193,12 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
                             modifier = Modifier.fillMaxWidth().padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            InitialsAvatar(name = summary.memberName, size = 40)
+                            InitialsAvatar(name = summary.memberName, size = 40, photoUrl = summary.photoUrl)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(summary.memberName, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                                 Text(
-                                    if (summary.balance > 0) "owes you" else "you owe",
+                                    if (summary.balance > 0) stringResource(R.string.dashboard_owes_you) else stringResource(R.string.dashboard_you_owe_lower),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )

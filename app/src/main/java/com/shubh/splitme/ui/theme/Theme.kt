@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalContext
@@ -95,8 +96,12 @@ fun SplitMeTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
-            shapes = Shapes,
-            content = content
-        )
+            shapes = Shapes
+        ) {
+            // Screens sit on a transparent Scaffold over the glass background, so nothing sets a
+            // content color and Text/Icon would fall back to Compose's default black, unreadable
+            // in dark mode. Give everything the theme's text color instead.
+            CompositionLocalProvider(LocalContentColor provides colorScheme.onBackground, content = content)
+        }
     }
 }
