@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="action_back">वापस</string>
+    <string name="action_cancel">रद्द करें</string>
+    <string name="action_add">जोड़ें</string>
+    <string name="action_save">सेव करें</string>
+    <string name="action_create">बनाएँ</string>
+    <string name="action_delete">हटाएँ</string>
+    <string name="action_remove">हटाएँ</string>
+    <string name="action_ok">ठीक है</string>
+    <string name="action_more_options">और विकल्प</string>
+    <string name="error_with_reason">%1$s: %2$s</string>
+    <string name="error_unknown">कुछ गलत हो गया</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_dashboard">डैशबोर्ड</string>
+    <string name="nav_groups">ग्रुप</string>
+    <string name="nav_profile">प्रोफ़ाइल</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_track_title">हर साझा खर्च का हिसाब रखें</string>
+    <string name="onboarding_track_body">यात्रा, फ़्लैटमेट या बाहर खाने के बिल जोड़ें। देखें किसने कितना दिया और पैसा कहाँ जा रहा है — दिन, हफ़्ते या महीने के हिसाब से।</string>
+    <string name="onboarding_split_title">बिल बाँटें और हिसाब चुकाएँ</string>
+    <string name="onboarding_split_body">बराबर या अपनी मर्ज़ी की रकम में बाँटें। SplitMe बताता है कि किसे किसको कितना देना है, ताकि सब एक टैप में हिसाब चुका सकें।</string>
+    <string name="onboarding_skip">छोड़ें</string>
+    <string name="onboarding_next">आगे</string>
+    <string name="onboarding_get_started">शुरू करें</string>
+
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">डैशबोर्ड</string>
+    <string name="dashboard_total_balance">कुल बैलेंस</string>
+    <string name="dashboard_you_are_owed">आपको मिलना है</string>
+    <string name="dashboard_you_owe">आपको देना है</string>
+    <string name="dashboard_statistic">आँकड़े</string>
+    <string name="dashboard_spend">खर्च</string>
+    <string name="dashboard_no_spending">अभी तक कोई खर्च नहीं।</string>
+    <string name="dashboard_people_summary">लोगों का सारांश</string>
+    <string name="dashboard_no_balances">दूसरों के साथ कोई बकाया नहीं।</string>
+    <string name="dashboard_owes_you">आपको देंगे</string>
+    <string name="dashboard_you_owe_lower">आपको देना है</string>
+    <string name="range_day">दिन</string>
+    <string name="range_week">हफ़्ता</string>
+    <string name="range_month">महीना</string>
+    <string name="range_year">साल</string>
+    <string name="chart_week_of_month">ह%1$d</string>
+    <string name="chart_not_enough_data">अभी पर्याप्त डेटा नहीं है</string>
+    <string name="error_load_dashboard">डैशबोर्ड का डेटा लोड नहीं हो सका</string>
+
+    <!-- Bill categories -->
+    <string name="category_general">सामान्य</string>
+    <string name="category_food">खाना</string>
+    <string name="category_transport">आना-जाना</string>
+    <string name="category_shopping">खरीदारी</string>
+    <string name="category_entertainment">मनोरंजन</string>
+    <string name="category_settle_up">हिसाब चुकता</string>
+
+    <!-- Groups list -->
+    <string name="groups_title">ग्रुप</string>
+    <string name="groups_add">ग्रुप जोड़ें</string>
+    <string name="groups_empty">अभी कोई ग्रुप नहीं है। एक बनाएँ!</string>
+    <plurals name="group_people_count">
+        <item quantity="one">%d व्यक्ति</item>
+        <item quantity="other">%d लोग</item>
+    </plurals>
+    <string name="group_you_get">आपको %1$s मिलेंगे</string>
+    <string name="group_you_owe">आपको %1$s देने हैं</string>
+    <string name="group_settled_up">हिसाब बराबर</string>
+    <string name="group_total_spent">कुल खर्च</string>
+    <string name="group_no_bills">अभी कोई बिल नहीं</string>
+    <string name="group_menu_add_contacts">संपर्क जोड़ें</string>
+    <string name="group_menu_delete">ग्रुप हटाएँ</string>
+    <string name="group_delete_title">\"%1$s\" हटाएँ?</string>
+    <string name="group_delete_message">यह ग्रुप सभी के लिए हट जाएगा। इसे वापस नहीं लाया जा सकता।</string>
+    <string name="group_create_title">ग्रुप बनाएँ</string>
+    <string name="group_field_name">ग्रुप का नाम</string>
+    <string name="group_field_description">विवरण (वैकल्पिक)</string>
+    <string name="error_enter_group_name">कृपया ग्रुप का नाम डालें</string>
+    <string name="error_load_groups">ग्रुप लोड नहीं हो सके</string>
+    <string name="error_load_group_totals">ग्रुप का कुल खर्च लोड नहीं हो सका</string>
+    <string name="error_create_group">ग्रुप नहीं बन सका</string>
+    <string name="error_delete_group">ग्रुप नहीं हटाया जा सका</string>
+
+    <!-- Group detail -->
+    <string name="group_manage_members">सदस्य संभालें</string>
+    <string name="group_settle_up">हिसाब चुकाएँ</string>
+    <string name="group_add_bill">बिल जोड़ें</string>
+    <string name="group_total_spending">ग्रुप का कुल खर्च</string>
+    <string name="group_summary">ग्रुप का सारांश</string>
+    <string name="group_no_members">अभी कोई सदस्य नहीं।</string>
+    <string name="balance_is_owed">को %1$s मिलने हैं</string>
+    <string name="balance_owes">को %1$s देने हैं</string>
+    <string name="balance_settled">का हिसाब बराबर है</string>
+    <string name="group_who_owes_whom">किसे किसको देना है</string>
+    <string name="group_x_owes_y">%1$s को %2$s को देना है</string>
+    <string name="group_recent_bills">हाल के बिल</string>
+    <string name="group_no_bills_yet">अभी कोई बिल नहीं।</string>
+    <string name="group_paid_by">%1$s ने भुगतान किया</string>
+    <string name="unknown_person">अज्ञात</string>
+    <string name="group_min_one_member">ग्रुप में कम से कम एक सदस्य होना चाहिए।</string>
+    <string name="error_add_member">सदस्य नहीं जोड़ा जा सका</string>
+    <string name="error_remove_member">सदस्य नहीं हटाया जा सका</string>
+    <string name="error_enter_a_name">कृपया नाम डालें</string>
+    <string name="info_added_to_group">%1$s को ग्रुप में जोड़ा गया</string>
+    <string name="error_add_person">%1$s को नहीं जोड़ा जा सका</string>
+
+    <!-- Bill entry -->
+    <string name="bill_title_for_group">%1$s में बिल जोड़ें</string>
+    <string name="bill_field_title">शीर्षक</string>
+    <string name="bill_field_amount">कुल रकम</string>
+    <string name="bill_field_category">श्रेणी</string>
+    <string name="bill_field_paid_by">किसने दिया</string>
+    <string name="bill_select_payer">देने वाला चुनें</string>
+    <string name="bill_split_type">बाँटने का तरीका:</string>
+    <string name="bill_split_equal">बराबर</string>
+    <string name="bill_split_manual">अपने हिसाब से</string>
+    <string name="bill_balanced">हिसाब बराबर!</string>
+    <string name="bill_remaining">बाकी: %1$s</string>
+    <string name="bill_each_pays">हर व्यक्ति देगा: %1$s</string>
+    <string name="error_enter_bill_title">कृपया बिल का शीर्षक डालें</string>
+    <string name="error_amount_positive">कुल रकम 0 से ज़्यादा होनी चाहिए</string>
+    <string name="error_shares_mismatch">कुल हिस्से (%1$s) कुल रकम (%2$s) के बराबर होने चाहिए</string>
+    <string name="error_load_bills">बिल लोड नहीं हो सके</string>
+    <string name="error_add_bill">बिल नहीं जोड़ा जा सका</string>
+
+    <!-- Settle up -->
+    <string name="settle_title">हिसाब चुकाएँ</string>
+    <string name="settle_net_balances">कुल बैलेंस</string>
+    <string name="settle_no_balances">दिखाने के लिए कोई बैलेंस नहीं।</string>
+    <string name="settle_suggested">सुझाए गए भुगतान</string>
+    <string name="settle_all_settled">सबका हिसाब बराबर है!</string>
+    <string name="settle_owes_money">%1$s को पैसे देने हैं</string>
+    <string name="settle_button">हिसाब चुकाएँ</string>
+    <string name="settle_record_payment">भुगतान दर्ज करें</string>
+    <string name="settle_x_paying_y">%1$s, %2$s को भुगतान कर रहे हैं</string>
+    <string name="settle_field_amount">रकम</string>
+    <string name="settle_record">दर्ज करें</string>
+    <string name="error_load_balances">बैलेंस लोड नहीं हो सके</string>
+    <string name="error_record_settlement">भुगतान दर्ज नहीं हो सका</string>
+
+    <!-- Contacts -->
+    <string name="contacts_title">संपर्क जोड़ें</string>
+    <string name="contacts_search">संपर्क खोजें…</string>
+    <string name="contacts_add_manually">खुद जोड़ें</string>
+    <string name="contacts_in_group">इस ग्रुप में (%1$d)</string>
+    <string name="contacts_phone_contacts">फ़ोन के संपर्क</string>
+    <string name="contacts_none_on_phone">इस फ़ोन में कोई संपर्क नहीं मिला। किसी को खुद जोड़ने के लिए + दबाएँ।</string>
+    <string name="contacts_no_match">\"%1$s\" से कोई संपर्क नहीं मिला।</string>
+    <string name="contacts_remove_person">%1$s को हटाएँ</string>
+    <string name="contacts_permission_off">संपर्कों की अनुमति बंद है। फ़ोन से लोगों को चुनने के लिए इसे सेटिंग्स में चालू करें।</string>
+    <string name="contacts_permission_ask">फ़ोन से लोगों को चुनने के लिए अपने संपर्कों तक पहुँच दें।</string>
+    <string name="contacts_open_settings">सेटिंग्स खोलें</string>
+    <string name="contacts_allow_access">संपर्कों की अनुमति दें</string>
+    <string name="contacts_add_by_hand_hint">आप + दबाकर किसी को खुद भी जोड़ सकते हैं।</string>
+    <string name="contacts_manual_title">संपर्क खुद जोड़ें</string>
+    <string name="field_name">नाम</string>
+    <string name="error_load_contacts">संपर्क लोड नहीं हो सके</string>
+    <string name="error_load_members">सदस्य लोड नहीं हो सके</string>
+    <string name="error_enter_member_name">कृपया सदस्य का नाम डालें</string>
+    <string name="error_save_member">सदस्य सेव नहीं हो सका</string>
+
+    <!-- Members (legacy list) -->
+    <string name="members_title">सदस्य</string>
+    <string name="members_add">सदस्य जोड़ें</string>
+    <string name="members_empty">अभी कोई सदस्य नहीं। कुछ जोड़ें!</string>
+
+    <!-- Profile -->
+    <string name="profile_title">प्रोफ़ाइल बदलें</string>
+    <string name="profile_log_out">लॉग आउट</string>
+    <string name="profile_field_full_name">पूरा नाम</string>
+    <string name="profile_hint_full_name">आपका पूरा नाम</string>
+    <string name="profile_field_mobile">मोबाइल नंबर</string>
+    <string name="profile_field_dob">जन्म तिथि</string>
+    <string name="profile_hint_dob">अपनी जन्म तिथि चुनें</string>
+    <string name="profile_field_location">स्थान (वैकल्पिक)</string>
+    <string name="profile_hint_location">शहर, देश</string>
+    <string name="profile_field_language">भाषा</string>
+    <string name="profile_submit">सबमिट करें</string>
+    <string name="profile_logout_title">लॉग आउट करें?</string>
+    <string name="profile_logout_message">अपने ग्रुप देखने के लिए आपको फिर से साइन इन करना होगा।</string>
+    <string name="profile_logout_confirm">लॉग आउट</string>
+    <string name="profile_saved">प्रोफ़ाइल सेव हो गई</string>
+    <string name="error_load_profile">प्रोफ़ाइल लोड नहीं हो सकी</string>
+    <string name="error_save_profile">प्रोफ़ाइल सेव नहीं हो सकी</string>
+    <string name="error_not_signed_in">प्रोफ़ाइल सेव करने के लिए साइन इन होना ज़रूरी है</string>
+
+    <string name="language_system">सिस्टम की भाषा</string>
+
+    <!-- Profile validation -->
+    <string name="validation_name_required">कृपया अपना पूरा नाम डालें</string>
+    <string name="validation_name_short">नाम कम से कम 2 अक्षरों का होना चाहिए</string>
+    <string name="validation_name_long">नाम 50 अक्षरों से ज़्यादा नहीं होना चाहिए</string>
+    <string name="validation_name_chars">नाम में सिर्फ़ अक्षर, स्पेस, . \' और - हो सकते हैं</string>
+    <string name="validation_dob_required">कृपया अपनी जन्म तिथि चुनें</string>
+    <string name="validation_dob_future">जन्म तिथि भविष्य की नहीं हो सकती</string>
+    <string name="validation_dob_min_age">आपकी उम्र कम से कम %1$d साल होनी चाहिए</string>
+    <string name="validation_dob_invalid">कृपया सही जन्म तिथि डालें</string>
+    <string name="validation_location_long">स्थान 100 अक्षरों से ज़्यादा नहीं होना चाहिए</string>
+
+    <!-- Phone sign-in and profile picture -->
+    <string name="auth_welcome_title">splitMe में आपका स्वागत है</string>
+    <string name="auth_phone_subtitle">साइन इन करने या खाता बनाने के लिए अपना मोबाइल नंबर डालें।</string>
+    <string name="auth_mobile_number">मोबाइल नंबर</string>
+    <string name="auth_sms_note">आपका नंबर जाँचने के लिए हम SMS से 6 अंकों का कोड भेजेंगे। SMS शुल्क लग सकता है।</string>
+    <string name="auth_send_code">कोड भेजें</string>
+    <string name="auth_code_title">कोड डालें</string>
+    <string name="auth_code_subtitle">हमने %1$s पर 6 अंकों का कोड भेजा है</string>
+    <string name="auth_change_number">नंबर बदलें</string>
+    <string name="auth_resend_in">%1$s में कोड फिर से भेजें</string>
+    <string name="auth_resend">कोड फिर से भेजें</string>
+    <string name="auth_verify">पुष्टि करें</string>
+    <string name="auth_name_title">आपका नाम क्या है?</string>
+    <string name="auth_name_subtitle">दोस्त इसे ग्रुप और बिल में देखेंगे।</string>
+    <string name="auth_continue">आगे बढ़ें</string>
+    <string name="auth_error_phone_required">कृपया अपना मोबाइल नंबर डालें</string>
+    <string name="auth_error_phone_invalid">यह चुने गए देश के लिए सही मोबाइल नंबर नहीं है</string>
+    <string name="auth_error_code_incomplete">6 अंकों का कोड डालें</string>
+    <string name="auth_error_code_wrong">यह कोड सही नहीं है। SMS देखें और फिर से कोशिश करें।</string>
+    <string name="auth_error_code_expired">इस कोड की समय-सीमा खत्म हो गई है। नया कोड पाने के लिए \"कोड फिर से भेजें\" दबाएँ।</string>
+    <string name="auth_error_too_many">बहुत ज़्यादा कोशिशें हो गईं। कृपया थोड़ी देर बाद फिर से कोशिश करें।</string>
+    <string name="auth_error_quota">अभी SMS की सीमा पूरी हो गई है। कृपया बाद में कोशिश करें।</string>
+    <string name="auth_error_not_configured">इस ऐप के लिए फ़ोन से साइन इन अभी चालू नहीं है। कृपया बाद में कोशिश करें।</string>
+    <string name="auth_error_network">इंटरनेट कनेक्शन नहीं है। कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="auth_error_generic">साइन इन नहीं हो सका</string>
+    <string name="auth_error_save_name">आपका नाम सेव नहीं हो सका</string>
+    <string name="phone_choose_country">देश चुनें</string>
+    <string name="phone_search_country">देश या कोड खोजें</string>
+    <string name="profile_mobile_verified">पुष्टि किया गया नंबर, जिससे आप साइन इन करते हैं</string>
+    <string name="profile_photo">प्रोफ़ाइल फ़ोटो</string>
+    <string name="profile_change_photo">प्रोफ़ाइल फ़ोटो बदलें</string>
+    <string name="profile_choose_photo">फ़ोटो चुनें</string>
+    <string name="profile_remove_photo">फ़ोटो हटाएँ</string>
+    <string name="profile_photo_updated">प्रोफ़ाइल फ़ोटो बदल गई</string>
+    <string name="profile_photo_removed">प्रोफ़ाइल फ़ोटो हटा दी गई</string>
+    <string name="error_upload_photo">प्रोफ़ाइल फ़ोटो नहीं बदली जा सकी</string>
+</resources>

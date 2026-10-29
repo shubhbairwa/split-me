@@ -1,0 +1,205 @@
+Index: .github/workflows/android.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>name: Android CI\r\n\r\non:\r\n  push:\r\n    branches:\r\n      - main\r\n      - develop\r\n\r\njobs:\r\n  build:\r\n    runs-on: ubuntu-latest\r\n\r\n    steps:\r\n      - uses: actions/checkout@v4\r\n\r\n      - uses: actions/setup-java@v4\r\n        with:\r\n          distribution: temurin\r\n          java-version: 17\r\n\r\n      - uses: android-actions/setup-android@v3\r\n\r\n      - run: chmod +x gradlew\r\n\r\n      - run: ./gradlew clean\r\n\r\n      - run: ./gradlew assembleDebug\r\n\r\n      - uses: actions/upload-artifact@v4\r\n        with:\r\n          name: debug-apk\r\n          path: app/build/outputs/apk/debug/*.apk
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.github/workflows/android.yml b/.github/workflows/android.yml
+--- a/.github/workflows/android.yml	(revision 67e9b9e3a0c860069e3eaa3df5a94bc2d80fb9e3)
++++ b/.github/workflows/android.yml	(date 1782459937597)
+@@ -1,32 +1,182 @@
++# ==========================================================
++# Workflow Name
++# This is what appears in the GitHub Actions tab.
++# ==========================================================
+ name: Android CI
+ 
++# ==========================================================
++# When should this workflow run?
++#
++# 1. Whenever code is pushed to master or develop
++# 2. Whenever a Pull Request targets master or develop
++# ==========================================================
+ on:
+   push:
+     branches:
+-      - main
++      - master
++      - develop
++
++  pull_request:
++    branches:
++      - master
+       - develop
+ 
++# ==========================================================
++# Jobs Section
++#
++# A workflow can contain multiple jobs.
++# Here we have only one job named "verify".
++# ==========================================================
+ jobs:
+-  build:
++
++  verify:
++
++    # ------------------------------------------------------
++    # GitHub creates a fresh Ubuntu virtual machine
++    # for every workflow execution.
++    # ------------------------------------------------------
+     runs-on: ubuntu-latest
+ 
++    # ------------------------------------------------------
++    # Steps execute one after another.
++    #
++    # IMPORTANT:
++    # If any step fails,
++    # all subsequent steps are skipped automatically.
++    # ------------------------------------------------------
+     steps:
+-      - uses: actions/checkout@v4
+ 
+-      - uses: actions/setup-java@v4
++      # ----------------------------------------------------
++      # Step 1
++      # Download the repository code onto the runner.
++      #
++      # Without this step, the VM has no project files.
++      # ----------------------------------------------------
++      - name: Checkout Repository
++        uses: actions/checkout@v4
++
++      # ----------------------------------------------------
++      # Step 2
++      # Install Java 17.
++      #
++      # Android projects require Java to execute Gradle.
++      #
++      # cache: gradle
++      # Automatically caches Gradle dependencies.
++      # ----------------------------------------------------
++      - name: Setup JDK 17
++        uses: actions/setup-java@v4
+         with:
+           distribution: temurin
+           java-version: 17
++          cache: gradle
++
++      # ----------------------------------------------------
++      # Step 3
++      # Install Android SDK.
++      #
++      # Required for building Android applications.
++      # ----------------------------------------------------
++      - name: Setup Android SDK
++        uses: android-actions/setup-android@v3
++
++      # ----------------------------------------------------
++      # Step 4
++      # Give execution permission to gradlew.
++      #
++      # Linux runners require execute permission.
++      # ----------------------------------------------------
++      - name: Make gradlew Executable
++        run: chmod +x gradlew
++
++      # ----------------------------------------------------
++      # Step 5
++      # Cache Gradle wrapper and downloaded libraries.
++      #
++      # This makes future builds much faster.
++      # ----------------------------------------------------
++      - name: Cache Gradle Dependencies
++        uses: actions/cache@v4
++        with:
++          path: |
++            ~/.gradle/caches
++            ~/.gradle/wrapper
++
++          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+ 
+-      - uses: android-actions/setup-android@v3
++          restore-keys: |
++            gradle-${{ runner.os }}
+ 
+-      - run: chmod +x gradlew
++      # ----------------------------------------------------
++      # Step 6
++      # Run Android Lint.
++      #
++      # Detects:
++      # • unused resources
++      # • bad practices
++      # • potential crashes
++      # • XML problems
++      #
++      # If lint fails,
++      # workflow stops here.
++      # ----------------------------------------------------
++      - name: Run Lint
++        run: ./gradlew lintDebug
+ 
+-      - run: ./gradlew clean
++      # ----------------------------------------------------
++      # Step 7
++      # Execute JVM Unit Tests.
++      #
++      # Located under:
++      # app/src/test
++      #
++      # If any unit test fails,
++      # Instrumented tests and build won't execute.
++      # ----------------------------------------------------
++      - name: Run Unit Tests
++        run: ./gradlew testDebugUnitTest
+ 
+-      - run: ./gradlew assembleDebug
++      # ----------------------------------------------------
++      # Step 8
++      # Start an Android Emulator
++      # and execute Instrumented Tests.
++      #
++      # Tests are located under:
++      # app/src/androidTest
++      #
++      # Requires an emulator.
++      # ----------------------------------------------------
++      - name: Run Instrumented Tests
++        uses: ReactiveCircus/android-emulator-runner@v2
++        with:
++          api-level: 35
++          arch: x86_64
++          profile: pixel_6
+ 
+-      - uses: actions/upload-artifact@v4
++          script: ./gradlew connectedDebugAndroidTest
++
++      # ----------------------------------------------------
++      # Step 9
++      # Build Debug APK.
++      #
++      # This runs ONLY IF:
++      #
++      # ✓ Lint Passed
++      # ✓ Unit Tests Passed
++      # ✓ Instrumented Tests Passed
++      # ----------------------------------------------------
++      - name: Build Debug APK
++        run: ./gradlew assembleDebug
++
++      # ----------------------------------------------------
++      # Step 10
++      # Upload the generated APK as an artifact.
++      #
++      # It can be downloaded from the
++      # GitHub Actions page after the workflow finishes.
++      # ----------------------------------------------------
++      - name: Upload Debug APK
++        uses: actions/upload-artifact@v4
+         with:
+           name: debug-apk
+-          path: app/build/outputs/apk/debug/*.apk
+\ No newline at end of file
++          path: app/build/outputs/apk/debug/app-debug.apk
+\ No newline at end of file

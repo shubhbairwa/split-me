@@ -2,40 +2,25 @@ package com.shubh.splitme.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import com.shubh.splitme.data.repository.GroupRepository
-import com.shubh.splitme.data.repository.MemberRepository
-import kotlinx.coroutines.launch
+import com.shubh.splitme.domain.repository.AuthRepository
+import com.shubh.splitme.domain.repository.GroupRepository
+import com.shubh.splitme.domain.repository.MemberRepository
 
 class MainViewModel(
+    private val authRepository: AuthRepository,
     private val memberRepository: MemberRepository,
     private val groupRepository: GroupRepository
 ) : ViewModel() {
-    init {
-        viewModelScope.launch {
-            val me = memberRepository.getOrCreateMe()
-            
-            // Ensure "Me" is in all groups
-            val groupsWithMembers = groupRepository.getGroupsWithMembersOnce()
-            groupsWithMembers.forEach { groupWithMembers ->
-                val hasMe = groupWithMembers.members.any { it.id == me.id }
-                if (!hasMe) {
-                    groupRepository.addMemberToGroup(groupWithMembers.group.id, me.id)
-                }
-            }
-        }
-    }
-
+    // Initialization logic if any
+    
     class Factory(
+        private val authRepository: AuthRepository,
         private val memberRepository: MemberRepository,
         private val groupRepository: GroupRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return MainViewModel(memberRepository, groupRepository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            @Suppress("UNCHECKED_CAST")
+            return MainViewModel(authRepository, memberRepository, groupRepository) as T
         }
     }
 }

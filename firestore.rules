@@ -1,0 +1,96 @@
+rules_version = '2';
+
+// splitMe security rules. Publish in the Firebase console: Firestore Database -> Rules.
+//
+// Who can see what:
+// - groups: members, the creator, and people invited by phone number (so they can join on sign-up)
+// - bills and shares: members of the bill's group
+// - members (people's names, numbers and photos): any signed-in user, because adding someone
+//   from your contacts looks them up by phone number. Accounts can only be edited by their owner.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myPhone() {
+      return request.auth.token.get('phone_number', '');
+    }
+
+    function groupData(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data;
+    }
+
+    // Plain field checks (no defaults) so Firestore can match them to the app's queries:
+    // memberIds array-contains uid, createdBy == uid, invitedPhones array-contains phone.
+    // A missing field just makes that check fail.
+    function isMemberOf(group) {
+      return request.auth.uid in group.memberIds || group.createdBy == request.auth.uid;
+    }
+
+    function isInvitedTo(group) {
+      return myPhone() != '' && myPhone() in group.invitedPhones;
+    }
+
+    function canUseGroup(groupId) {
+      return groupId is string && isMemberOf(groupData(groupId));
+    }
+
+    match /groups/{groupId} {
+      allow read: if signedIn() && (isMemberOf(resource.data) || isInvitedTo(resource.data));
+
+      // The creator must be the signed-in user and its first member.
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.auth.uid in request.resource.data.memberIds;
+
+      // Members manage the group. An invited person may only add themselves and clear their invite.
+      allow update: if signedIn() && (
+        isMemberOf(resource.data)
+        || (isInvitedTo(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'invitedPhones'])
+            && request.resource.data.memberIds.toSet().difference(resource.data.memberIds.toSet())
+                 .hasOnly([request.auth.uid]))
+      );
+
+      // The creator deletes; older groups with no recorded creator can be deleted by any member.
+      allow delete: if signedIn() && (
+        resource.data.get('createdBy', '') == request.auth.uid
+        || (resource.data.get('createdBy', '') == '' && request.auth.uid in resource.data.get('memberIds', []))
+      );
+    }
+
+    match /bills/{billId} {
+      allow read, update, delete: if signedIn() && canUseGroup(resource.data.groupId);
+      allow create: if signedIn() && canUseGroup(request.resource.data.groupId);
+    }
+
+    match /shares/{shareId} {
+      // A share belongs to a bill, which belongs to a group.
+      allow read, update, delete: if signedIn()
+        && canUseGroup(get(/databases/$(database)/documents/bills/$(resource.data.billId)).data.groupId);
+      // Shares are written together with their bill, so look at the bill as it will be.
+      allow create: if signedIn()
+        && canUseGroup(getAfter(/databases/$(database)/documents/bills/$(request.resource.data.billId)).data.groupId);
+    }
+
+    match /members/{memberId} {
+      allow read: if signedIn();
+
+      // Your own account document (its id is your uid), or a contact entry for someone without an account.
+      allow create: if signedIn() && (
+        memberId == request.auth.uid
+        || request.resource.data.get('hasAccount', false) == false
+      );
+
+      allow update: if signedIn() && (
+        memberId == request.auth.uid
+        || (resource.data.get('hasAccount', false) == false
+            && request.resource.data.get('hasAccount', false) == false)
+      );
+
+      allow delete: if signedIn() && memberId == request.auth.uid;
+    }
+  }
+}
