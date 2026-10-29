@@ -1,0 +1,73 @@
+Index: .idea/appInsightsSettings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/appInsightsSettings.xml b/.idea/appInsightsSettings.xml
+new file mode 100644
+--- /dev/null	(date 1793256131193)
++++ b/.idea/appInsightsSettings.xml	(date 1793256131193)
+@@ -0,0 +1,26 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="AppInsightsSettings">
++    <option name="tabSettings">
++      <map>
++        <entry key="Firebase Crashlytics">
++          <value>
++            <InsightsFilterSettings>
++              <option name="connection">
++                <ConnectionSetting>
++                  <option name="appId" value="com.shubh.splitme" />
++                  <option name="mobileSdkAppId" value="1:317909245980:android:93d1cdb1c34a3d7e92ffd9" />
++                  <option name="projectId" value="shubh-690d8" />
++                  <option name="projectNumber" value="317909245980" />
++                </ConnectionSetting>
++              </option>
++              <option name="signal" value="SIGNAL_UNSPECIFIED" />
++              <option name="timeIntervalDays" value="THIRTY_DAYS" />
++              <option name="visibilityType" value="ALL" />
++            </InsightsFilterSettings>
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/deploymentTargetSelector.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"deploymentTargetSelector\">\n    <selectionStates>\n      <SelectionState runConfigName=\"app\">\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\n        <DialogSelection />\n      </SelectionState>\n      <SelectionState runConfigName=\"androidTest\">\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\n        <DialogSelection />\n      </SelectionState>\n      <SelectionState runConfigName=\"unitTest\">\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\n        <DialogSelection />\n      </SelectionState>\n      <SelectionState runConfigName=\"main\">\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\n        <DialogSelection />\n      </SelectionState>\n    </selectionStates>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/deploymentTargetSelector.xml b/.idea/deploymentTargetSelector.xml
+--- a/.idea/deploymentTargetSelector.xml	(revision 07ed5549e4c502eb2eb7060247ff87dfff8ea5a8)
++++ b/.idea/deploymentTargetSelector.xml	(date 1793190104175)
+@@ -4,18 +4,13 @@
+     <selectionStates>
+       <SelectionState runConfigName="app">
+         <option name="selectionMode" value="DROPDOWN" />
+-        <DialogSelection />
+-      </SelectionState>
+-      <SelectionState runConfigName="androidTest">
+-        <option name="selectionMode" value="DROPDOWN" />
+-        <DialogSelection />
+-      </SelectionState>
+-      <SelectionState runConfigName="unitTest">
+-        <option name="selectionMode" value="DROPDOWN" />
+-        <DialogSelection />
+-      </SelectionState>
+-      <SelectionState runConfigName="main">
+-        <option name="selectionMode" value="DROPDOWN" />
++        <DropdownSelection timestamp="2026-10-28T12:21:01.185261Z">
++          <Target type="DEFAULT_BOOT">
++            <handle>
++              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CT236GESW" />
++            </handle>
++          </Target>
++        </DropdownSelection>
+         <DialogSelection />
+       </SelectionState>
+     </selectionStates>
