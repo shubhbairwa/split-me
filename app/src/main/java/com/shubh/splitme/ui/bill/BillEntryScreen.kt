@@ -20,6 +20,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shubh.splitme.domain.model.ExpenseShare
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
 import com.shubh.splitme.ui.theme.categoryStyleFor
@@ -44,6 +47,26 @@ fun BillEntryScreen(
         }
     }
 
+    BillEntryContent(
+        groupName = groupName,
+        members = members,
+        snackbarHostState = snackbarHostState,
+        onDismiss = onDismiss,
+        onSave = onSave
+    )
+}
+
+/** The bill form without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BillEntryContent(
+    groupName: String,
+    members: List<Member>,
+    snackbarHostState: SnackbarHostState,
+    onDismiss: () -> Unit,
+    onSave: (String, Double, String, String, List<ExpenseShare>) -> Unit,
+    initialManualSplit: Boolean = false
+) {
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("General") }
@@ -52,7 +75,7 @@ fun BillEntryScreen(
             members.find { it.name.equals("Me", ignoreCase = true) } ?: members.firstOrNull()
         ) 
     }
-    var isManualSplit by remember { mutableStateOf(false) }
+    var isManualSplit by remember { mutableStateOf(initialManualSplit) }
     
     val manualShares = remember { mutableStateMapOf<String, String>() }
     
@@ -265,5 +288,34 @@ fun BillEntryScreen(
                 }
             }
         }
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun BillEntryEqualSplitPreview() {
+    PreviewScreen {
+        BillEntryContent(
+            groupName = PreviewData.goaTrip.group.name,
+            members = PreviewData.members,
+            snackbarHostState = remember { SnackbarHostState() },
+            onDismiss = {},
+            onSave = { _, _, _, _, _ -> }
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun BillEntryManualSplitPreview() {
+    PreviewScreen {
+        BillEntryContent(
+            groupName = PreviewData.goaTrip.group.name,
+            members = PreviewData.members,
+            snackbarHostState = remember { SnackbarHostState() },
+            onDismiss = {},
+            onSave = { _, _, _, _, _ -> },
+            initialManualSplit = true
+        )
     }
 }

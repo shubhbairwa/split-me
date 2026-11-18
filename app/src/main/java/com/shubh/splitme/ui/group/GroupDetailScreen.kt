@@ -35,6 +35,9 @@ import com.shubh.splitme.ui.bill.BillViewModel
 import com.shubh.splitme.ui.components.BalanceHeaderCard
 import com.shubh.splitme.ui.components.InitialsAvatar
 import com.shubh.splitme.ui.member.ContactSelectionScreen
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.NegativeRed
 import com.shubh.splitme.ui.theme.PositiveGreen
@@ -127,187 +130,213 @@ fun GroupDetailScreen(
             }
         )
     } else {
-        Scaffold(
+        GroupDetailContent(
+            groupWithMembers = currentGroupWithMembers,
+            bills = bills,
+            balances = balances,
+            snackbarHostState = snackbarHostState,
+            onBack = onBack,
+            onManageMembers = { showAddMember = true },
+            onSettleUp = { showSettleUp = true },
+            onAddBill = { showBillEntry = true }
+        )
+    }
+}
+
+/** The group detail UI without the ViewModels, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GroupDetailContent(
+    groupWithMembers: GroupWithMembers,
+    bills: List<BillWithShares>,
+    balances: List<MemberBalance>,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onManageMembers: () -> Unit,
+    onSettleUp: () -> Unit,
+    onAddBill: () -> Unit
+) {
+    val currentGroupWithMembers = groupWithMembers
+    Scaffold(
         contentWindowInsets = tabScreenInsets(),
-            containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            topBar = {
-                TopAppBar(
-                    title = { Text(currentGroupWithMembers.group.name, fontWeight = FontWeight.Bold, color = TextPrimary) },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { showAddMember = true }) {
-                            Icon(Icons.Outlined.PersonAdd, contentDescription = stringResource(R.string.group_manage_members), tint = TextPrimary)
-                        }
-                        TextButton(onClick = { showSettleUp = true }) {
-                            Text(stringResource(R.string.group_settle_up), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                        }
+        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text(currentGroupWithMembers.group.name, fontWeight = FontWeight.Bold, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
                     }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showBillEntry = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                ) {
-                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.group_add_bill))
+                },
+                actions = {
+                    IconButton(onClick = onManageMembers) {
+                        Icon(Icons.Outlined.PersonAdd, contentDescription = stringResource(R.string.group_manage_members), tint = TextPrimary)
+                    }
+                    TextButton(onClick = onSettleUp) {
+                        Text(stringResource(R.string.group_settle_up), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    }
                 }
-            }
-        ) { padding ->
-            val totalSpent = bills.sumOf { it.bill.totalAmount }
-            val settlements = remember(balances) { suggestedSettlements(balances) }
-
-            LazyColumn(
-                modifier = Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize().padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(top = 12.dp, bottom = padding.calculateBottomPadding() + 12.dp)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddBill,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
             ) {
-                item {
-                    BalanceHeaderCard(
-                        label = stringResource(R.string.group_total_spending),
-                        amountText = "%.2f".format(totalSpent)
-                    )
-                }
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.group_add_bill))
+            }
+        }
+    ) { padding ->
+        val totalSpent = bills.sumOf { it.bill.totalAmount }
+        val settlements = remember(balances) { suggestedSettlements(balances) }
 
-                item {
-                    Card(
-                        modifier = Modifier.glassShadow(MaterialTheme.shapes.large).fillMaxWidth(),
-                        shape = MaterialTheme.shapes.large,
-                        colors = glassCardColors(),
-                        border = glassBorder(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text(stringResource(R.string.group_summary), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
-                            Spacer(modifier = Modifier.height(14.dp))
+        LazyColumn(
+            modifier = Modifier.padding(top = padding.calculateTopPadding()).fillMaxSize().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = padding.calculateBottomPadding() + 12.dp)
+        ) {
+            item {
+                BalanceHeaderCard(
+                    label = stringResource(R.string.group_total_spending),
+                    amountText = "%.2f".format(totalSpent)
+                )
+            }
 
-                            if (balances.isEmpty()) {
-                                Text(stringResource(R.string.group_no_members), color = TextSecondary)
-                            } else {
-                                balances.forEachIndexed { index, memberBalance ->
-                                    val balance = memberBalance.balance
-                                    val color = when {
-                                        balance > 0.01 -> PositiveGreen
-                                        balance < -0.01 -> NegativeRed
-                                        else -> TextSecondary
-                                    }
-                                    val statusText = when {
-                                        balance > 0.01 -> stringResource(R.string.balance_is_owed, "%.2f".format(balance))
-                                        balance < -0.01 -> stringResource(R.string.balance_owes, "%.2f".format(abs(balance)))
-                                        else -> stringResource(R.string.balance_settled)
-                                    }
+            item {
+                Card(
+                    modifier = Modifier.glassShadow(MaterialTheme.shapes.large).fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = glassCardColors(),
+                    border = glassBorder(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(stringResource(R.string.group_summary), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        if (balances.isEmpty()) {
+                            Text(stringResource(R.string.group_no_members), color = TextSecondary)
+                        } else {
+                            balances.forEachIndexed { index, memberBalance ->
+                                val balance = memberBalance.balance
+                                val color = when {
+                                    balance > 0.01 -> PositiveGreen
+                                    balance < -0.01 -> NegativeRed
+                                    else -> TextSecondary
+                                }
+                                val statusText = when {
+                                    balance > 0.01 -> stringResource(R.string.balance_is_owed, "%.2f".format(balance))
+                                    balance < -0.01 -> stringResource(R.string.balance_owes, "%.2f".format(abs(balance)))
+                                    else -> stringResource(R.string.balance_settled)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    InitialsAvatar(name = memberBalance.member.name, size = 36, photoUrl = memberBalance.member.photoUrl)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        memberBalance.member.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = TextPrimary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        statusText,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = color,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                if (index != balances.lastIndex) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                }
+                            }
+
+                            if (settlements.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(stringResource(R.string.group_who_owes_whom), style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                                Spacer(modifier = Modifier.height(10.dp))
+                                settlements.forEach { (from, to, amount) ->
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        InitialsAvatar(name = memberBalance.member.name, size = 36, photoUrl = memberBalance.member.photoUrl)
-                                        Spacer(modifier = Modifier.width(12.dp))
                                         Text(
-                                            memberBalance.member.name,
-                                            style = MaterialTheme.typography.bodyLarge,
+                                            stringResource(R.string.group_x_owes_y, from.name, to.name),
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = TextPrimary,
                                             modifier = Modifier.weight(1f)
                                         )
                                         Text(
-                                            statusText,
+                                            "%.2f".format(amount),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = color,
+                                            color = NegativeRed,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
-                                    if (index != balances.lastIndex) {
-                                        Spacer(modifier = Modifier.height(10.dp))
-                                    }
-                                }
-
-                                if (settlements.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text(stringResource(R.string.group_who_owes_whom), style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    settlements.forEach { (from, to, amount) ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.group_x_owes_y, from.name, to.name),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = TextPrimary,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                            Text(
-                                                "%.2f".format(amount),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = NegativeRed,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
 
+            item {
+                Text(
+                    stringResource(R.string.group_recent_bills),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary
+                )
+            }
+
+            if (bills.isEmpty()) {
                 item {
-                    Text(
-                        stringResource(R.string.group_recent_bills),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary
-                    )
-                }
-
-                if (bills.isEmpty()) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text(stringResource(R.string.group_no_bills_yet), color = TextSecondary)
-                        }
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        Text(stringResource(R.string.group_no_bills_yet), color = TextSecondary)
                     }
-                } else {
-                    items(bills) { billWithShares ->
-                        val payerName = currentGroupWithMembers.members.find { it.id == billWithShares.bill.payerId }?.name ?: stringResource(R.string.unknown_person)
-                        val style = categoryStyleFor(billWithShares.bill.category)
-                        Card(
-                            modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
-                            shape = MaterialTheme.shapes.medium,
-                            colors = glassCardColors(),
-                            border = glassBorder(),
-                            elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+                }
+            } else {
+                items(bills) { billWithShares ->
+                    val payerName = currentGroupWithMembers.members.find { it.id == billWithShares.bill.payerId }?.name ?: stringResource(R.string.unknown_person)
+                    val style = categoryStyleFor(billWithShares.bill.category)
+                    Card(
+                        modifier = Modifier.glassShadow(MaterialTheme.shapes.medium).fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = glassCardColors(),
+                        border = glassBorder(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp).fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(style.badgeColor.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(MaterialTheme.shapes.small)
-                                        .background(style.badgeColor.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(style.icon, contentDescription = null, tint = style.badgeColor)
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(if (billWithShares.bill.category == "SettleUp") categoryLabel("SettleUp") else billWithShares.bill.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                                    Text(
-                                        stringResource(R.string.group_paid_by, payerName),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = TextSecondary
-                                    )
-                                }
+                                Icon(style.icon, contentDescription = null, tint = style.badgeColor)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(if (billWithShares.bill.category == "SettleUp") categoryLabel("SettleUp") else billWithShares.bill.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                                 Text(
-                                    "%.2f".format(billWithShares.bill.totalAmount),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = TextPrimary
+                                    stringResource(R.string.group_paid_by, payerName),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
                                 )
                             }
+                            Text(
+                                "%.2f".format(billWithShares.bill.totalAmount),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextPrimary
+                            )
                         }
                     }
                 }
@@ -341,4 +370,38 @@ private fun suggestedSettlements(balances: List<MemberBalance>): List<Triple<Mem
         if (debtors[di].second < 0.01) di++
     }
     return settlements
+}
+
+@ScreenPreviews
+@Composable
+private fun GroupDetailPreview() {
+    PreviewScreen {
+        GroupDetailContent(
+            groupWithMembers = PreviewData.goaTrip,
+            bills = PreviewData.bills,
+            balances = PreviewData.balances,
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onManageMembers = {},
+            onSettleUp = {},
+            onAddBill = {}
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun GroupDetailEmptyPreview() {
+    PreviewScreen {
+        GroupDetailContent(
+            groupWithMembers = PreviewData.flat,
+            bills = emptyList(),
+            balances = emptyList(),
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onManageMembers = {},
+            onSettleUp = {},
+            onAddBill = {}
+        )
+    }
 }

@@ -62,7 +62,12 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shubh.splitme.ui.dashboard.ChartPoint
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewData
 import com.shubh.splitme.ui.theme.AccentOrange
+import com.shubh.splitme.ui.theme.PositiveGreen
+import com.shubh.splitme.ui.theme.categoryStyleFor
 import com.shubh.splitme.ui.theme.AccentOrangeDeep
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.CardWhite
@@ -389,5 +394,61 @@ fun BalanceHeaderCard(
                 subContent()
             }
         }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun InitialsAvatarPreview() {
+    PreviewComponent {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            InitialsAvatar(name = "Aisha", size = 32)
+            InitialsAvatar(name = "Rohan")
+            InitialsAvatar(name = "Priya", size = 56)
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun SegmentedTabsPreview() {
+    PreviewComponent {
+        SegmentedTabs(options = listOf("Day", "Week", "Month", "Year"), selectedIndex = 1, onSelect = {})
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun SpendLineChartPreview() {
+    PreviewComponent { SpendLineChart(points = PreviewData.chartPoints) }
+}
+
+@ComponentPreviews
+@Composable
+private fun SpendLineChartEmptyPreview() {
+    PreviewComponent { SpendLineChart(points = emptyList()) }
+}
+
+@ComponentPreviews
+@Composable
+private fun CategorySpendCardPreview() {
+    PreviewComponent {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CategorySpendCard(style = categoryStyleFor("Food"), category = "Food", percent = 42f, modifier = Modifier.weight(1f))
+            CategorySpendCard(style = categoryStyleFor("Transport"), category = "Transport", percent = 25f, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun BalanceHeaderCardPreview() {
+    PreviewComponent {
+        BalanceHeaderCard(
+            label = "Total balance",
+            amountText = "+2800.00",
+            amountColor = PositiveGreen,
+            subContent = { Text("You are owed 4250.00", color = TextSecondary) }
+        )
     }
 }

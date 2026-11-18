@@ -36,6 +36,16 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 
 /**
  * Colors for the "glass" look: translucent frosted panels over a soft, colorful backdrop.
@@ -200,4 +210,28 @@ fun GlassBackground(modifier: Modifier = Modifier, content: @Composable BoxScope
             },
         content = content
     )
+}
+
+@ScreenPreviews
+@Composable
+private fun GlassBackgroundPreview() {
+    PreviewScreen {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Card(
+                modifier = Modifier.glassShadow(RoundedCornerShape(24.dp)).fillMaxWidth().height(120.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = glassCardColors(),
+                border = glassBorder()
+            ) { Text("Glass card", modifier = Modifier.padding(20.dp)) }
+            Card(
+                modifier = Modifier.fillMaxWidth().height(80.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = glassCardColors(selected = true),
+                border = glassBorder()
+            ) { Text("Selected glass card", modifier = Modifier.padding(20.dp)) }
+            Box(modifier = Modifier.fillMaxWidth().height(56.dp).glassPanel(RoundedCornerShape(28.dp), strong = true)) {
+                Text("Strong glass panel", modifier = Modifier.padding(16.dp))
+            }
+        }
+    }
 }

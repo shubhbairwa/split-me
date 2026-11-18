@@ -30,6 +30,10 @@ import com.shubh.splitme.ui.theme.PureWhite
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
 import com.shubh.splitme.ui.theme.glassShadow
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(@DrawableRes val image: Int, @StringRes val title: Int, @StringRes val body: Int)
@@ -52,7 +56,12 @@ private val ImageShape = RoundedCornerShape(32.dp)
 /** Two intro slides shown once, before sign-in. [onFinish] runs on "Get Started" or "Skip". */
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit) {
-    val pagerState = rememberPagerState(pageCount = { Pages.size })
+    OnboardingContent(onFinish = onFinish)
+}
+
+@Composable
+private fun OnboardingContent(onFinish: () -> Unit, initialPage: Int = 0) {
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { Pages.size })
     val scope = rememberCoroutineScope()
     val isLast = pagerState.currentPage == Pages.lastIndex
 
@@ -151,4 +160,22 @@ private fun PageDots(count: Int, current: Int, modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+@ScreenPreviews
+@Composable
+private fun OnboardingFirstPagePreview() {
+    PreviewScreen { OnboardingContent(onFinish = {}, initialPage = 0) }
+}
+
+@ScreenPreviews
+@Composable
+private fun OnboardingLastPagePreview() {
+    PreviewScreen { OnboardingContent(onFinish = {}, initialPage = Pages.lastIndex) }
+}
+
+@ComponentPreviews
+@Composable
+private fun PageDotsPreview() {
+    PreviewComponent { PageDots(count = 3, current = 1) }
 }

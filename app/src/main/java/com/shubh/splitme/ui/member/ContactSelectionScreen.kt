@@ -48,6 +48,11 @@ import com.shubh.splitme.ui.components.PhoneNumberInput
 import com.shubh.splitme.data.PhoneNumbers
 import com.shubh.splitme.data.matchesContact
 import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
@@ -68,8 +73,6 @@ fun ContactSelectionScreen(
     val contacts by viewModel.contacts.collectAsState()
     val defaultIso = remember { PhoneNumbers.defaultCountry(context).iso }
     val isLoadingContacts by viewModel.isLoadingContacts.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
-    var showManualAdd by remember { mutableStateOf(false) }
     var permissionRequested by rememberSaveable { mutableStateOf(false) }
 
     val contactsPermissionState = rememberPermissionState(
@@ -89,6 +92,52 @@ fun ContactSelectionScreen(
     LaunchedEffect(Unit) {
         viewModel.error.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
+
+    ContactSelectionContent(
+        selectedMembers = selectedMembers,
+        contacts = contacts,
+        isLoadingContacts = isLoadingContacts,
+        isGranted = isGranted,
+        permanentlyDenied = permanentlyDenied,
+        defaultIso = defaultIso,
+        snackbarHostState = snackbarHostState,
+        onAddContact = onAddContact,
+        onRemoveMember = onRemoveMember,
+        onBack = onBack,
+        onRequestPermission = {
+            permissionRequested = true
+            contactsPermissionState.launchPermissionRequest()
+        },
+        onOpenSettings = {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", context.packageName, null)
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    )
+}
+
+/** The Add Contacts UI without the ViewModel or permission handling, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ContactSelectionContent(
+    selectedMembers: List<Member>,
+    contacts: List<ContactInfo>,
+    isLoadingContacts: Boolean,
+    isGranted: Boolean,
+    permanentlyDenied: Boolean,
+    defaultIso: String,
+    snackbarHostState: SnackbarHostState,
+    onAddContact: (name: String, email: String?, phone: String?) -> Unit,
+    onRemoveMember: (Member) -> Unit,
+    onBack: () -> Unit,
+    onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var showManualAdd by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = tabScreenInsets(),
@@ -172,18 +221,8 @@ fun ContactSelectionScreen(
                 !isGranted -> item(key = "permission") {
                     PermissionPrompt(
                         permanentlyDenied = permanentlyDenied,
-                        onRequest = {
-                            permissionRequested = true
-                            contactsPermissionState.launchPermissionRequest()
-                        },
-                        onOpenSettings = {
-                            context.startActivity(
-                                Intent(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                    Uri.fromParts("package", context.packageName, null)
-                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            )
-                        }
+                        onRequest = onRequestPermission,
+                        onOpenSettings = onOpenSettings
                     )
                 }
                 isLoadingContacts && contacts.isEmpty() -> item(key = "loading") {
@@ -438,4 +477,71 @@ fun AddMemberDialog(onDismiss: () -> Unit, onAdd: (String, String?, String?) -> 
             }
         }
     )
+}
+
+@Composable
+private fun ContactSelectionPreview(isGranted: Boolean, permanentlyDenied: Boolean = false, contacts: List<ContactInfo> = PreviewData.contacts) {
+    PreviewScreen {
+        ContactSelectionContent(
+            selectedMembers = PreviewData.goaTrip.members.take(2),
+            contacts = contacts,
+            isLoadingContacts = false,
+            isGranted = isGranted,
+            permanentlyDenied = permanentlyDenied,
+            defaultIso = "IN",
+            snackbarHostState = remember { SnackbarHostState() },
+            onAddContact = { _, _, _ -> },
+            onRemoveMember = {},
+            onBack = {},
+            onRequestPermission = {},
+            onOpenSettings = {}
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun ContactSelectionWithContactsPreview() = ContactSelectionPreview(isGranted = true)
+
+@ScreenPreviews
+@Composable
+private fun ContactSelectionNoPermissionPreview() = ContactSelectionPreview(isGranted = false)
+
+@ScreenPreviews
+@Composable
+private fun ContactSelectionPermissionDeniedPreview() = ContactSelectionPreview(isGranted = false, permanentlyDenied = true)
+
+@ComponentPreviews
+@Composable
+private fun GroupMemberRowPreview() {
+    PreviewComponent { GroupMemberRow(member = PreviewData.aisha, onRemove = {}) }
+}
+
+@ComponentPreviews
+@Composable
+private fun ContactSelectionCardPreview() {
+    PreviewComponent {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ContactSelectionCard(contact = PreviewData.contacts[0], isSelected = true, onClick = {})
+            ContactSelectionCard(contact = PreviewData.contacts[1], isSelected = false, onClick = {})
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun MemberAvatarPreview() {
+    PreviewComponent { MemberAvatar(name = "Kabir", photoUri = null) }
+}
+
+@ComponentPreviews
+@Composable
+private fun PermissionPromptPreview() {
+    PreviewComponent { PermissionPrompt(permanentlyDenied = false, onRequest = {}, onOpenSettings = {}) }
+}
+
+@ScreenPreviews
+@Composable
+private fun AddMemberDialogPreview() {
+    PreviewScreen { AddMemberDialog(onDismiss = {}, onAdd = { _, _, _ -> }) }
 }

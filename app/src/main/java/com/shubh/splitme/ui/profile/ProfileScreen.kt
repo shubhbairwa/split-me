@@ -51,6 +51,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.ui.components.colorForName
+import com.shubh.splitme.domain.model.Member
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.AccentOrange
 import com.shubh.splitme.ui.theme.AccentOrangeDeep
 import com.shubh.splitme.ui.theme.PureWhite
@@ -77,19 +83,47 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) viewModel.uploadPhoto(context, uri)
     }
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(Unit) { viewModel.error.collect { snackbarHostState.showSnackbar(it.resolve(context)) } }
+    LaunchedEffect(Unit) { viewModel.saved.collect { snackbarHostState.showSnackbar(it.resolve(context)) } }
+
+    ProfileContent(
+        me = me,
+        isSaving = isSaving,
+        isUploadingPhoto = isUploadingPhoto,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onLogout = onLogout,
+        onChoosePhoto = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+        onRemovePhoto = viewModel::removePhoto,
+        onSave = { name, dobMillis, location -> viewModel.saveProfile(name, dobMillis, location) }
+    )
+}
+
+/** The profile UI without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileContent(
+    me: Member?,
+    isSaving: Boolean,
+    isUploadingPhoto: Boolean,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onLogout: () -> Unit,
+    onChoosePhoto: () -> Unit,
+    onRemovePhoto: () -> Unit,
+    onSave: (name: String, dobMillis: Long?, location: String) -> Unit,
+    initialShowErrors: Boolean = false
+) {
     var name by rememberSaveable { mutableStateOf("") }
     var dobMillis by rememberSaveable { mutableStateOf<Long?>(null) }
     var location by rememberSaveable { mutableStateOf("") }
     var loadedFor by rememberSaveable { mutableStateOf<String?>(null) }
     // Messages appear after the first Save tap, then update live as the user fixes each field.
-    var showErrors by rememberSaveable { mutableStateOf(false) }
+    var showErrors by rememberSaveable { mutableStateOf(initialShowErrors) }
     var showDatePicker by remember { mutableStateOf(false) }
     var confirmLogout by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) { viewModel.error.collect { snackbarHostState.showSnackbar(it.resolve(context)) } }
-    LaunchedEffect(Unit) { viewModel.saved.collect { snackbarHostState.showSnackbar(it.resolve(context)) } }
 
     // Fill the form once per signed-in user, without overwriting what they're typing.
     LaunchedEffect(me) {
@@ -142,8 +176,8 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 name = name.ifBlank { me?.name.orEmpty() },
                 photoUrl = me?.photoUrl,
                 uploading = isUploadingPhoto,
-                onChoosePhoto = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                onRemovePhoto = { viewModel.removePhoto() }
+                onChoosePhoto = onChoosePhoto,
+                onRemovePhoto = onRemovePhoto
             )
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -212,7 +246,7 @@ fun ProfileScreen(onBack: () -> Unit, onLogout: () -> Unit) {
                 onClick = {
                     // Invalid fields show their message under the field; nothing is saved until all pass.
                     showErrors = true
-                    viewModel.saveProfile(name, dobMillis, location)
+                    onSave(name, dobMillis, location)
                 },
                 enabled = !isSaving && me != null,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -501,4 +535,63 @@ private fun LanguagePicker() {
             }
         }
     }
+}
+
+@Composable
+private fun ProfilePreview(me: Member?, isSaving: Boolean = false, isUploadingPhoto: Boolean = false, showErrors: Boolean = false) {
+    PreviewScreen {
+        ProfileContent(
+            me = me,
+            isSaving = isSaving,
+            isUploadingPhoto = isUploadingPhoto,
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onLogout = {},
+            onChoosePhoto = {},
+            onRemovePhoto = {},
+            onSave = { _, _, _ -> },
+            initialShowErrors = showErrors
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun ProfileFilledPreview() = ProfilePreview(me = PreviewData.me)
+
+@ScreenPreviews
+@Composable
+private fun ProfileEmptyWithErrorsPreview() =
+    ProfilePreview(me = PreviewData.me.copy(name = "", dateOfBirth = null, location = null), showErrors = true)
+
+@ScreenPreviews
+@Composable
+private fun ProfileSavingPreview() = ProfilePreview(me = PreviewData.me, isSaving = true, isUploadingPhoto = true)
+
+@ComponentPreviews
+@Composable
+private fun ProfileAvatarPreview() {
+    PreviewComponent { ProfileAvatar(name = "Dhruv Rawat", photoUrl = null, uploading = false, onChoosePhoto = {}, onRemovePhoto = {}) }
+}
+
+@ComponentPreviews
+@Composable
+private fun FormFieldPreview() {
+    PreviewComponent {
+        FormField(label = "Full name", error = null) {
+            ProfileTextField(value = "Dhruv Rawat", onValueChange = {}, placeholder = "Your name")
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun LanguagePickerPreview() {
+    PreviewComponent { LanguagePicker() }
+}
+
+@ScreenPreviews
+@Composable
+private fun DateOfBirthPickerPreview() {
+    PreviewScreen { DateOfBirthPicker(initialMillis = null, onDismiss = {}, onPicked = {}) }
 }

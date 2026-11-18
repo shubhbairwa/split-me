@@ -26,6 +26,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.shubh.splitme.R
 import com.shubh.splitme.data.Country
 import com.shubh.splitme.data.PhoneNumbers
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.AccentOrange
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
@@ -191,4 +196,32 @@ fun CountryPickerDialog(onDismiss: () -> Unit, onPick: (Country) -> Unit) {
             }
         }
     }
+}
+
+@ComponentPreviews
+@Composable
+private fun PhoneNumberInputPreview() {
+    PreviewComponent {
+        PhoneNumberInput(country = PreviewData.india, onCountryChange = {}, number = "98765 43210", onNumberChange = {})
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun PhoneNumberInputErrorPreview() {
+    PreviewComponent {
+        PhoneNumberInput(
+            country = PreviewData.india,
+            onCountryChange = {},
+            number = "123",
+            onNumberChange = {},
+            error = R.string.auth_error_phone_invalid
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun CountryPickerDialogPreview() {
+    PreviewScreen { CountryPickerDialog(onDismiss = {}, onPick = {}) }
 }

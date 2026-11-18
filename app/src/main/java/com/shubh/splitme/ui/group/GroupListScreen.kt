@@ -30,6 +30,11 @@ import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.domain.model.Group
 import com.shubh.splitme.domain.model.GroupWithMembers
 import com.shubh.splitme.ui.components.InitialsAvatar
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.NegativeRed
 import com.shubh.splitme.ui.theme.PositiveGreen
@@ -55,8 +60,6 @@ fun GroupListScreen() {
         }
     }
 
-    var showAddGroupDialog by remember { mutableStateOf(false) }
-    var groupToDelete by remember { mutableStateOf<Group?>(null) }
     var selectedGroupForDetail by remember { mutableStateOf<GroupWithMembers?>(null) }
     var openDetailOnAddMembers by remember { mutableStateOf(false) }
 
@@ -67,84 +70,106 @@ fun GroupListScreen() {
             startWithAddMembers = openDetailOnAddMembers
         )
     } else {
-        Scaffold(
-        contentWindowInsets = tabScreenInsets(),
-            containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.groups_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
-                )
+        GroupListContent(
+            groups = groups,
+            summaries = summaries,
+            snackbarHostState = snackbarHostState,
+            onOpenGroup = { group, addMembers ->
+                openDetailOnAddMembers = addMembers
+                selectedGroupForDetail = group
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showAddGroupDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
+            onCreateGroup = groupViewModel::createGroup,
+            onDeleteGroup = groupViewModel::deleteGroup
+        )
+    }
+}
+
+/** The group list UI without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GroupListContent(
+    groups: List<GroupWithMembers>,
+    summaries: Map<String, GroupSummary>,
+    snackbarHostState: SnackbarHostState,
+    /** Second value: open straight onto Add Contacts. */
+    onOpenGroup: (GroupWithMembers, Boolean) -> Unit,
+    onCreateGroup: (String, String?) -> Unit,
+    onDeleteGroup: (String) -> Unit
+) {
+    var showAddGroupDialog by remember { mutableStateOf(false) }
+    var groupToDelete by remember { mutableStateOf<Group?>(null) }
+
+    Scaffold(
+        contentWindowInsets = tabScreenInsets(),
+        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.groups_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddGroupDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.groups_add))
+            }
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
+            if (groups.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(stringResource(R.string.groups_empty), color = TextSecondary)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 12.dp, bottom = padding.calculateBottomPadding() + 12.dp)
                 ) {
-                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.groups_add))
-                }
-            }
-        ) { padding ->
-            Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
-                if (groups.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.groups_empty), color = TextSecondary)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(top = 12.dp, bottom = padding.calculateBottomPadding() + 12.dp)
-                    ) {
-                        items(groups, key = { it.group.id }) { groupWithMembers ->
-                            GroupCard(
-                                groupWithMembers = groupWithMembers,
-                                summary = summaries[groupWithMembers.group.id],
-                                onOpen = {
-                                    openDetailOnAddMembers = false
-                                    selectedGroupForDetail = groupWithMembers
-                                },
-                                onAddContacts = {
-                                    openDetailOnAddMembers = true
-                                    selectedGroupForDetail = groupWithMembers
-                                },
-                                onDelete = { groupToDelete = groupWithMembers.group }
-                            )
-                        }
+                    items(groups, key = { it.group.id }) { groupWithMembers ->
+                        GroupCard(
+                            groupWithMembers = groupWithMembers,
+                            summary = summaries[groupWithMembers.group.id],
+                            onOpen = { onOpenGroup(groupWithMembers, false) },
+                            onAddContacts = { onOpenGroup(groupWithMembers, true) },
+                            onDelete = { groupToDelete = groupWithMembers.group }
+                        )
                     }
                 }
             }
+        }
 
-            if (showAddGroupDialog) {
-                AddGroupDialog(
-                    onDismiss = { showAddGroupDialog = false },
-                    onAdd = { name, desc ->
-                        groupViewModel.createGroup(name, desc)
-                        showAddGroupDialog = false
-                    }
-                )
-            }
+        if (showAddGroupDialog) {
+            AddGroupDialog(
+                onDismiss = { showAddGroupDialog = false },
+                onAdd = { name, desc ->
+                    onCreateGroup(name, desc)
+                    showAddGroupDialog = false
+                }
+            )
+        }
 
-            groupToDelete?.let { group ->
-                AlertDialog(
-                    onDismissRequest = { groupToDelete = null },
-                    title = { Text(stringResource(R.string.group_delete_title, group.name)) },
-                    text = { Text(stringResource(R.string.group_delete_message)) },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            groupViewModel.deleteGroup(group.id)
-                            groupToDelete = null
-                        }) {
-                            Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { groupToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+        groupToDelete?.let { group ->
+            AlertDialog(
+                onDismissRequest = { groupToDelete = null },
+                title = { Text(stringResource(R.string.group_delete_title, group.name)) },
+                text = { Text(stringResource(R.string.group_delete_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDeleteGroup(group.id)
+                        groupToDelete = null
+                    }) {
+                        Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                     }
-                )
-            }
+                },
+                dismissButton = {
+                    TextButton(onClick = { groupToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+                }
+            )
         }
     }
 }
@@ -304,4 +329,58 @@ fun AddGroupDialog(onDismiss: () -> Unit, onAdd: (String, String?) -> Unit) {
             }
         }
     )
+}
+
+@ScreenPreviews
+@Composable
+private fun GroupListPreview() {
+    PreviewScreen {
+        GroupListContent(
+            groups = PreviewData.groups,
+            summaries = PreviewData.groupSummaries,
+            snackbarHostState = remember { SnackbarHostState() },
+            onOpenGroup = { _, _ -> },
+            onCreateGroup = { _, _ -> },
+            onDeleteGroup = {}
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun GroupListEmptyPreview() {
+    PreviewScreen {
+        GroupListContent(
+            groups = emptyList(),
+            summaries = emptyMap(),
+            snackbarHostState = remember { SnackbarHostState() },
+            onOpenGroup = { _, _ -> },
+            onCreateGroup = { _, _ -> },
+            onDeleteGroup = {}
+        )
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun GroupCardPreview() {
+    PreviewComponent {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            PreviewData.groups.forEach { group ->
+                GroupCard(
+                    groupWithMembers = group,
+                    summary = PreviewData.groupSummaries[group.group.id],
+                    onOpen = {},
+                    onAddContacts = {},
+                    onDelete = {}
+                )
+            }
+        }
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun AddGroupDialogPreview() {
+    PreviewScreen { AddGroupDialog(onDismiss = {}, onAdd = { _, _ -> }) }
 }

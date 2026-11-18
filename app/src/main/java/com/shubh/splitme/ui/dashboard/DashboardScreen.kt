@@ -27,6 +27,9 @@ import com.shubh.splitme.ui.components.CategorySpendCard
 import com.shubh.splitme.ui.components.InitialsAvatar
 import com.shubh.splitme.ui.components.SegmentedTabs
 import com.shubh.splitme.ui.components.SpendLineChart
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.NegativeRed
 import com.shubh.splitme.ui.theme.PositiveGreen
@@ -45,15 +48,27 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var selectedRangeIndex by remember { mutableIntStateOf(1) }
-    val ranges = TimeRange.entries
-    val rangeLabels = listOf(stringResource(R.string.range_day), stringResource(R.string.range_week), stringResource(R.string.range_month), stringResource(R.string.range_year))
 
     LaunchedEffect(Unit) {
         viewModel.error.collect { message ->
             snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
+
+    DashboardContent(state = state, snackbarHostState = snackbarHostState, onNavigateToProfile = onNavigateToProfile)
+}
+
+/** The dashboard UI without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardContent(
+    state: DashboardState,
+    snackbarHostState: SnackbarHostState,
+    onNavigateToProfile: () -> Unit
+) {
+    var selectedRangeIndex by remember { mutableIntStateOf(1) }
+    val ranges = TimeRange.entries
+    val rangeLabels = listOf(stringResource(R.string.range_day), stringResource(R.string.range_week), stringResource(R.string.range_month), stringResource(R.string.range_year))
 
     Scaffold(
         contentWindowInsets = tabScreenInsets(),
@@ -215,5 +230,21 @@ fun DashboardScreen(onNavigateToProfile: () -> Unit) {
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun DashboardPreview() {
+    PreviewScreen {
+        DashboardContent(state = PreviewData.dashboard, snackbarHostState = remember { SnackbarHostState() }, onNavigateToProfile = {})
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun DashboardEmptyPreview() {
+    PreviewScreen {
+        DashboardContent(state = DashboardState(), snackbarHostState = remember { SnackbarHostState() }, onNavigateToProfile = {})
     }
 }

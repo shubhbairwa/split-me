@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.ui.components.InitialsAvatar
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
+import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.TextPrimary
 import com.shubh.splitme.ui.theme.TextSecondary
@@ -34,7 +38,6 @@ fun MemberListScreen() {
     val viewModel: MemberViewModel = viewModel(factory = MemberViewModel.Factory(app.memberRepository))
     
     val members by viewModel.allMembers.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -42,6 +45,23 @@ fun MemberListScreen() {
             snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
+
+    MemberListContent(
+        members = members,
+        snackbarHostState = snackbarHostState,
+        onAddMember = { name, phone -> viewModel.addMember(name, email = null, phoneNumber = phone) }
+    )
+}
+
+/** The member list UI without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MemberListContent(
+    members: List<Member>,
+    snackbarHostState: SnackbarHostState,
+    onAddMember: (name: String, phone: String?) -> Unit
+) {
+    var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -101,10 +121,26 @@ fun MemberListScreen() {
                 onDismiss = { showAddDialog = false },
                 // Same name + mobile number dialog as the Add Contacts screen.
                 onAdd = { name, _, phone ->
-                    viewModel.addMember(name, email = null, phoneNumber = phone)
+                    onAddMember(name, phone)
                     showAddDialog = false
                 }
             )
         }
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun MemberListPreview() {
+    PreviewScreen {
+        MemberListContent(members = PreviewData.members, snackbarHostState = remember { SnackbarHostState() }, onAddMember = { _, _ -> })
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun MemberListEmptyPreview() {
+    PreviewScreen {
+        MemberListContent(members = emptyList(), snackbarHostState = remember { SnackbarHostState() }, onAddMember = { _, _ -> })
     }
 }

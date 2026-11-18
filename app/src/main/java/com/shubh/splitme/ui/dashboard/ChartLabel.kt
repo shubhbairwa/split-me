@@ -4,7 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.shubh.splitme.R
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
 import java.text.DateFormatSymbols
+import java.util.Calendar
 
 /**
  * What a chart point stands for. The ViewModel says which hour/day/month it is; the screen turns
@@ -27,5 +32,20 @@ fun ChartLabel.text(): String {
         is ChartLabel.Weekday -> DateFormatSymbols.getInstance(locale).shortWeekdays[calendarDay]
         is ChartLabel.WeekOfMonth -> stringResource(R.string.chart_week_of_month, week)
         is ChartLabel.Month -> DateFormatSymbols.getInstance(locale).shortMonths[month]
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun ChartLabelPreview() {
+    PreviewComponent {
+        Column {
+            listOf(
+                ChartLabel.Hour(9),
+                ChartLabel.Weekday(Calendar.MONDAY),
+                ChartLabel.WeekOfMonth(2),
+                ChartLabel.Month(Calendar.MARCH)
+            ).forEach { Text(it.text()) }
+        }
     }
 }

@@ -25,6 +25,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shubh.splitme.SplitMeApplication
 import com.shubh.splitme.domain.model.Member
 import com.shubh.splitme.ui.components.InitialsAvatar
+import com.shubh.splitme.ui.preview.PreviewData
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.theme.CardElevation
 import com.shubh.splitme.ui.theme.NegativeRed
 import com.shubh.splitme.ui.theme.PositiveGreen
@@ -46,7 +49,6 @@ fun SettleUpScreen(
     )
 
     val balances by viewModel.memberBalances.collectAsState()
-    var showSettleDialog by remember { mutableStateOf<Pair<Member, Member>?>(null) } // From owes To
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -54,6 +56,26 @@ fun SettleUpScreen(
             snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
+
+    SettleUpContent(
+        balances = balances,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onSettle = viewModel::settleUp
+    )
+}
+
+/** The settle-up UI without the ViewModel, so it can be shown in previews. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettleUpContent(
+    balances: List<MemberBalance>,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    /** From member id, to member id, amount. */
+    onSettle: (String, String, Double) -> Unit
+) {
+    var showSettleDialog by remember { mutableStateOf<Pair<Member, Member>?>(null) } // From owes To
 
     Scaffold(
         contentWindowInsets = tabScreenInsets(),
@@ -198,7 +220,7 @@ fun SettleUpScreen(
                 suggestedAmount = maxAmount,
                 onDismiss = { showSettleDialog = null },
                 onConfirm = { amount ->
-                    viewModel.settleUp(from.id, to.id, amount)
+                    onSettle(from.id, to.id, amount)
                     showSettleDialog = null
                 }
             )
@@ -245,4 +267,38 @@ fun SettleUpDialog(
             }
         }
     )
+}
+
+@ScreenPreviews
+@Composable
+private fun SettleUpPreview() {
+    PreviewScreen {
+        SettleUpContent(
+            balances = PreviewData.balances,
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onSettle = { _, _, _ -> }
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun SettleUpAllSettledPreview() {
+    PreviewScreen {
+        SettleUpContent(
+            balances = PreviewData.members.map { MemberBalance(it, 0.0) },
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onSettle = { _, _, _ -> }
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun SettleUpDialogPreview() {
+    PreviewScreen {
+        SettleUpDialog(from = PreviewData.aisha, to = PreviewData.me, suggestedAmount = 1200.0, onDismiss = {}, onConfirm = {})
+    }
 }

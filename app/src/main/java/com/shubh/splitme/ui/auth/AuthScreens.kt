@@ -34,7 +34,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shubh.splitme.R
+import com.shubh.splitme.data.Country
 import com.shubh.splitme.data.PhoneNumbers
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
+import com.shubh.splitme.ui.preview.PreviewScreen
+import com.shubh.splitme.ui.preview.ScreenPreviews
 import com.shubh.splitme.ui.components.PhoneNumberInput
 import com.shubh.splitme.ui.theme.AccentOrange
 import com.shubh.splitme.ui.theme.AccentOrangeDeep
@@ -57,6 +62,34 @@ fun AuthFlowScreen(viewModel: AuthViewModel) {
         viewModel.error.collect { snackbarHostState.showSnackbar(it.resolve(context)) }
     }
 
+    AuthFlowContent(
+        step = step,
+        isLoading = isLoading,
+        fieldError = fieldError,
+        snackbarHostState = snackbarHostState,
+        onClearFieldError = viewModel::clearFieldError,
+        onSendCode = { country, number -> context.findActivity()?.let { viewModel.sendCode(it, country, number) } },
+        onResendCode = { context.findActivity()?.let { viewModel.resendCode(it) } },
+        onVerifyCode = viewModel::verifyCode,
+        onChangeNumber = viewModel::changeNumber,
+        onSaveName = viewModel::saveName
+    )
+}
+
+/** The sign-in UI without the ViewModel, so it can be shown in previews. */
+@Composable
+private fun AuthFlowContent(
+    step: AuthStep,
+    isLoading: Boolean,
+    fieldError: Int?,
+    snackbarHostState: SnackbarHostState,
+    onClearFieldError: () -> Unit,
+    onSendCode: (Country, String) -> Unit,
+    onResendCode: () -> Unit,
+    onVerifyCode: (String) -> Unit,
+    onChangeNumber: () -> Unit,
+    onSaveName: (String) -> Unit
+) {
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -70,21 +103,26 @@ fun AuthFlowScreen(viewModel: AuthViewModel) {
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             when (val s = step) {
-                AuthStep.EnterPhone -> PhoneStep(viewModel, isLoading, fieldError)
-                is AuthStep.EnterCode -> CodeStep(viewModel, s, isLoading, fieldError)
-                AuthStep.EnterName -> NameStep(viewModel, isLoading, fieldError)
+                AuthStep.EnterPhone -> PhoneStep(isLoading, fieldError, onClearFieldError, onSendCode)
+                is AuthStep.EnterCode -> CodeStep(s, isLoading, fieldError, onClearFieldError, onVerifyCode, onResendCode, onChangeNumber)
+                AuthStep.EnterName -> NameStep(isLoading, fieldError, onClearFieldError, onSaveName)
             }
         }
     }
 }
 
 @Composable
-private fun PhoneStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: Int?) {
+private fun PhoneStep(
+    isLoading: Boolean,
+    fieldError: Int?,
+    onClearFieldError: () -> Unit,
+    onSendCode: (Country, String) -> Unit
+) {
     val context = LocalContext.current
     var countryIso by rememberSaveable { mutableStateOf(PhoneNumbers.defaultCountry(context).iso) }
     val country = remember(countryIso) { PhoneNumbers.country(countryIso) ?: PhoneNumbers.defaultCountry(context) }
     var number by rememberSaveable { mutableStateOf("") }
-    val send = { context.findActivity()?.let { viewModel.sendCode(it, country, number) } ?: Unit }
+    val send = { onSendCode(country, number) }
 
     Spacer(modifier = Modifier.height(72.dp))
     Text(stringResource(R.string.auth_welcome_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
@@ -103,12 +141,12 @@ private fun PhoneStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: 
         country = country,
         onCountryChange = {
             countryIso = it.iso
-            viewModel.clearFieldError()
+            onClearFieldError()
         },
         number = number,
         onNumberChange = {
             number = it
-            viewModel.clearFieldError()
+            onClearFieldError()
         },
         error = fieldError,
         enabled = !isLoading,
@@ -121,8 +159,15 @@ private fun PhoneStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: 
 }
 
 @Composable
-private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoading: Boolean, fieldError: Int?) {
-    val context = LocalContext.current
+private fun CodeStep(
+    step: AuthStep.EnterCode,
+    isLoading: Boolean,
+    fieldError: Int?,
+    onClearFieldError: () -> Unit,
+    onVerifyCode: (String) -> Unit,
+    onResendCode: () -> Unit,
+    onChangeNumber: () -> Unit
+) {
     var code by rememberSaveable(step.verificationId) { mutableStateOf("") }
     // Seconds until "Resend code" is allowed, counted from when this code was sent.
     var secondsLeft by remember(step.sentAtMillis) { mutableIntStateOf(RESEND_DELAY_SECONDS) }
@@ -134,10 +179,10 @@ private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoadi
             delay(1000)
         }
     }
-    BackHandler { viewModel.changeNumber() }
+    BackHandler { onChangeNumber() }
 
     Spacer(modifier = Modifier.height(16.dp))
-    IconButton(onClick = { viewModel.changeNumber() }, modifier = Modifier.offset(x = (-12).dp)) {
+    IconButton(onClick = { onChangeNumber() }, modifier = Modifier.offset(x = (-12).dp)) {
         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = TextPrimary)
     }
     Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +193,7 @@ private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoadi
         style = MaterialTheme.typography.bodyLarge,
         color = TextSecondary
     )
-    TextButton(onClick = { viewModel.changeNumber() }, contentPadding = PaddingValues(0.dp)) {
+    TextButton(onClick = { onChangeNumber() }, contentPadding = PaddingValues(0.dp)) {
         Text(stringResource(R.string.auth_change_number), color = AccentOrange, fontWeight = FontWeight.SemiBold)
     }
     Spacer(modifier = Modifier.height(24.dp))
@@ -157,8 +202,8 @@ private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoadi
         code = code,
         onCodeChange = {
             code = it
-            viewModel.clearFieldError()
-            if (it.length == OTP_LENGTH) viewModel.verifyCode(it)
+            onClearFieldError()
+            if (it.length == OTP_LENGTH) onVerifyCode(it)
         },
         isError = fieldError != null,
         enabled = !isLoading
@@ -180,7 +225,7 @@ private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoadi
         )
     } else {
         TextButton(
-            onClick = { context.findActivity()?.let { viewModel.resendCode(it) } },
+            onClick = onResendCode,
             enabled = !isLoading,
             contentPadding = PaddingValues(0.dp)
         ) {
@@ -188,11 +233,16 @@ private fun CodeStep(viewModel: AuthViewModel, step: AuthStep.EnterCode, isLoadi
         }
     }
     Spacer(modifier = Modifier.height(24.dp))
-    PrimaryButton(text = stringResource(R.string.auth_verify), loading = isLoading, onClick = { viewModel.verifyCode(code) })
+    PrimaryButton(text = stringResource(R.string.auth_verify), loading = isLoading, onClick = { onVerifyCode(code) })
 }
 
 @Composable
-private fun NameStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: Int?) {
+private fun NameStep(
+    isLoading: Boolean,
+    fieldError: Int?,
+    onClearFieldError: () -> Unit,
+    onSaveName: (String) -> Unit
+) {
     var name by rememberSaveable { mutableStateOf("") }
 
     Spacer(modifier = Modifier.height(72.dp))
@@ -204,7 +254,7 @@ private fun NameStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: I
         value = name,
         onValueChange = {
             name = it
-            viewModel.clearFieldError()
+            onClearFieldError()
         },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
@@ -214,7 +264,7 @@ private fun NameStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: I
         label = { Text(stringResource(R.string.profile_field_full_name)) },
         supportingText = fieldError?.let { { Text(stringResource(it)) } },
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { viewModel.saveName(name) }),
+        keyboardActions = KeyboardActions(onDone = { onSaveName(name) }),
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = glass.surface,
             unfocusedContainerColor = glass.surface,
@@ -223,7 +273,7 @@ private fun NameStep(viewModel: AuthViewModel, isLoading: Boolean, fieldError: I
         )
     )
     Spacer(modifier = Modifier.height(32.dp))
-    PrimaryButton(text = stringResource(R.string.auth_continue), loading = isLoading, onClick = { viewModel.saveName(name) })
+    PrimaryButton(text = stringResource(R.string.auth_continue), loading = isLoading, onClick = { onSaveName(name) })
 }
 
 /** Six boxes backed by one text field, so the keyboard, paste and SMS autofill all work. */
@@ -299,4 +349,61 @@ tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+@Composable
+private fun AuthPreview(step: AuthStep, isLoading: Boolean = false, fieldError: Int? = null) {
+    PreviewScreen {
+        AuthFlowContent(
+            step = step,
+            isLoading = isLoading,
+            fieldError = fieldError,
+            snackbarHostState = remember { SnackbarHostState() },
+            onClearFieldError = {},
+            onSendCode = { _, _ -> },
+            onResendCode = {},
+            onVerifyCode = {},
+            onChangeNumber = {},
+            onSaveName = {}
+        )
+    }
+}
+
+private val PreviewCodeStep = AuthStep.EnterCode(
+    phoneE164 = "+919876543210",
+    verificationId = "preview",
+    resendToken = Unit,
+    sentAtMillis = 0L
+)
+
+@ScreenPreviews
+@Composable
+private fun AuthPhoneStepPreview() = AuthPreview(AuthStep.EnterPhone)
+
+@ScreenPreviews
+@Composable
+private fun AuthPhoneStepErrorPreview() = AuthPreview(AuthStep.EnterPhone, fieldError = R.string.auth_error_phone_invalid)
+
+@ScreenPreviews
+@Composable
+private fun AuthCodeStepPreview() = AuthPreview(PreviewCodeStep)
+
+@ScreenPreviews
+@Composable
+private fun AuthNameStepPreview() = AuthPreview(AuthStep.EnterName)
+
+@ScreenPreviews
+@Composable
+private fun AuthLoadingPreview() = AuthPreview(AuthStep.EnterPhone, isLoading = true)
+
+@ComponentPreviews
+@Composable
+private fun OtpInputPreview() {
+    PreviewComponent { OtpInput(code = "482", onCodeChange = {}, isError = false, enabled = true) }
+}
+
+@ComponentPreviews
+@Composable
+private fun PrimaryButtonPreview() {
+    PreviewComponent { PrimaryButton(text = "Send code", loading = false, onClick = {}) }
 }

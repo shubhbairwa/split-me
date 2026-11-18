@@ -37,6 +37,8 @@ import com.shubh.splitme.ui.auth.AuthFlowScreen
 import com.shubh.splitme.ui.dashboard.DashboardScreen
 import com.shubh.splitme.ui.group.GroupListScreen
 import com.shubh.splitme.ui.profile.ProfileScreen
+import com.shubh.splitme.ui.preview.ComponentPreviews
+import com.shubh.splitme.ui.preview.PreviewComponent
 import com.shubh.splitme.ui.theme.AccentOrange
 import com.shubh.splitme.ui.theme.LocalBottomBarSpace
 import com.shubh.splitme.ui.theme.PureWhite
@@ -240,3 +242,26 @@ private fun GlassBottomBar(
         }
     }
 }
+
+@Composable
+private fun GlassBottomBarPreview(selected: Screen) {
+    PreviewComponent {
+        val hazeState = remember { HazeState() }
+        Box {
+            Box(modifier = Modifier.matchParentSize().hazeSource(hazeState))
+            GlassBottomBar(hazeState = hazeState, currentScreen = selected, onSelect = {})
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun GlassBottomBarDashboardPreview() = GlassBottomBarPreview(Screen.Dashboard)
+
+@ComponentPreviews
+@Composable
+private fun GlassBottomBarGroupsPreview() = GlassBottomBarPreview(Screen.Groups)
+
+@ComponentPreviews
+@Composable
+private fun GlassBottomBarProfilePreview() = GlassBottomBarPreview(Screen.Profile)
